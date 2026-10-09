@@ -113,17 +113,19 @@ saying what was asked, as of what date, how many records were read and how many 
 field (for example members without a start date). A chart pasted into a report can be rebuilt next year from its caption.
 
 Every chart is drawn in two shapes from the same data, sized so the finished image has exactly that proportion, title and
-caption included: a wide **slide** (16:9) and a **report** column (3:2) for a Word document. The page shows one; under it
-are links to download **both** as SVG (a vector file that opens in any drawing or slide program) and as PNG, and the
-**numbers** behind the chart as a tab-separated file that opens in Excel. The PNG link appears only where the page is
-allowed to run its own small script: in a saved copy of the page, or one opened on its own, but not inside a chat window
-that blocks scripts. If you want the agent to hand over a PNG as an attachment instead, ask it for "an image".
+caption included: a wide **slide** (16:9) and a **report** column (3:2) for a Word document. By default the agent hands the
+chart over as a **PNG image** in the shape asked for (ask for "the report shape" for a Word column), which you download like
+any picture; an image is also the cheapest way to deliver a chart (see below). If you want the interactive page instead, ask
+for it: it shows one shape, and under it are links to download **both** as SVG (a vector file that opens in any drawing or
+slide program) and as PNG, and the **numbers** behind the chart as a tab-separated file that opens in Excel. The page's own
+PNG link appears only where the page is allowed to run its small script: in a saved copy of the page, or one opened on its
+own, but not inside a chat window that blocks scripts.
 
 The same applies to **timelines**: bars for things with a start and an end, a diamond for a single date, a bar that runs on
 to today for something still going, a dashed line marking today, rows grouped into labelled bands.
 
 Making a PNG on the server needs the `rsvg-convert` program and a font. The supplied Docker image includes both
-(`librsvg2-bin` and `fonts-dejavu-core`); on a server without them an attachment request quietly falls back to the page.
+(`librsvg2-bin` and `fonts-dejavu-core`); on a server without them the chart quietly comes as the interactive page instead.
 
 ## Branding the charts
 
@@ -168,22 +170,20 @@ not that tool is used. This is why the descriptions are kept short and why a new
 |---|---|
 | aggregate | ~1350 |
 | search_records | ~1330 |
-| chart_over_time | ~1190 |
-| chart_breakdown | ~1040 |
+| chart_over_time | ~1230 |
+| chart_breakdown | ~1090 |
 | render_timeline | ~700 |
 | describe_form | ~450 |
 | linked_records | ~420 |
 | record_history | ~340 |
 | get_record | ~270 |
-| all tools together | ~7100 |
+| all tools together | ~7190 |
 
-**Cost per call.** A call returns a short text for the model (a few hundred tokens at most). A chart or timeline also
-returns a *page*. Whether the agent program passes that page on to the model, or only shows it to the person, depends on the
-program; the middle column is what it would cost if it did. The page is about four times the size of one picture, because it
-carries the picture and downloadable copies of both shapes.
+**Cost per call.** A call returns a short text for the model (a few hundred tokens at most). A chart or timeline can also return a *page*. Some agent programs keep that page in the conversation and send it again with every later request, so a page can be the largest cost of a conversation about a chart; an image attachment, by contrast, is kept as a file and the model reads only its name, which is why a PNG image is the default. The middle column is what a page would cost if it were passed on. A page is about four times the size of one picture, because it carries the picture and downloadable copies of both shapes.
 
 | Call | Text the model reads | Page (if the client passes it on) | One SVG file |
 |---|---|---|---|
+| any chart as a PNG attachment (the default) | ~150 | - (a file; the model reads only its name) | - |
 | chart_over_time, bars, 12 years, 1 series | ~120 | ~4770 | ~1140 |
 | chart_over_time, lines, 12 years, 2 series | ~140 | ~5540 | ~1340 |
 | chart_over_time, stacked, 12 years, 2 series | ~140 | ~7750 | ~1950 |
@@ -195,8 +195,8 @@ carries the picture and downloadable copies of both shapes.
 
 What drives the cost, in order: the **number of categories** (series) in a chart, then the number of points on the axis, then the
 kind of chart (bars are the cheapest, lines a little more, stacked charts the most). A PNG attachment is an image and costs
-as one. To keep costs down: ask for fewer categories (`top_n` merges the smallest into "Other"), leave charts as pages rather
-than attachments unless an image is needed, and do not add a tool for something an existing one can already do.
+as one. To keep costs down: ask for fewer categories (`top_n` merges the smallest into "Other"), keep charts as image attachments
+rather than interactive pages unless the page is needed, and do not add a tool for something an existing one can already do.
 
 ## Languages
 

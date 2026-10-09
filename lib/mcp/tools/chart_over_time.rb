@@ -13,13 +13,13 @@ module Mcp
     # What the two chart tools share: take the QUERY (not numbers), run the aggregation on the server, draw it in
     # the deployment's theme, and say in a caption exactly what was asked, so the chart can be rebuilt next year.
     module ChartSupport
-      OUTPUTS = %w[html png both].freeze
+      OUTPUTS = %w[png html both].freeze
 
       module_function
 
       # @return [Mcp::Result]
       def build(args, mode:)
-        output = (args['output'] || 'html').to_s.strip.downcase
+        output = (args['output'] || 'png').to_s.strip.downcase
         raise ToolError, "output must be one of: #{OUTPUTS.join(', ')}." unless OUTPUTS.include?(output)
 
         ctx = Records::Context.new
@@ -68,17 +68,36 @@ module Mcp
         lines
       end
 
+      # png (the default) attaches the chart as an image: the agent program keeps a file and the model reads only
+      # its name, which is by far the cheapest way to deliver a picture. html is the interactive page with
+      # downloads (both shapes as SVG and PNG, the numbers): the whole page becomes part of the conversation.
       def response(drawn, data, table, style, output)
-        png = Widgets::Raster.png(drawn[:svg]) if %w[png both].include?(output)
+        png = Widgets::Raster.png(drawn[:svg], width: png_width(drawn[:svg])) if %w[png both].include?(output)
         blocks = []
         blocks << { type: 'resource', resource: { uri: "ui://chart/#{Digest::SHA1.hexdigest(drawn[:html])[0, 12]}", mimeType: 'text/html', text: drawn[:html] } } unless output == 'png' && png
         blocks << { type: 'image', data: Base64.strict_encode64(png), mimeType: 'image/png' } if png
         summary = { style: style, shape: drawn[:shape], x: table.x_labels, series: table.series.map { |s| { label: s[:label], values: s[:values].map { |v| v.round(2) } } },
                     measure: data[:measure], as_of: data[:as_of], excluded: data[:excluded],
-                    attached: { html: !(output == 'png' && png), png: !png.nil? },
-                    note: 'The chart is attached. It has download links for SVG and PNG (slide 16:9 and report 3:2) and for the numbers. ' \
-                          'Describe it in a sentence and mention anything under excluded; if you cannot display it, give the numbers in text.' }.compact
+                    attached: { html: !(output == 'png' && png), png: !png.nil? }, note: note_for(output, png, drawn[:shape]) }.compact
         Result.new(summary, blocks)
+      end
+
+      # The PNG is drawn at twice the picture's own width, so a Word column stays as sharp as a slide.
+      def png_width(svg)
+        (svg[/width="(\d+)"/, 1] || 960).to_i * 2
+      end
+
+      def note_for(output, png, shape)
+        other = shape == 'slide' ? 'report' : 'slide'
+        if png && output == 'png'
+          "The chart is attached as a PNG image (shape #{shape}). Describe it in a sentence and mention anything under excluded. Ask for shape #{other} for the other proportion " \
+            '(slide 16:9 for presentations, report 3:2 for a Word column); ask for output html for an interactive page with SVG downloads, both shapes and the numbers.'
+        elsif png
+          'The chart is attached as an interactive page and as a PNG image. The page has download links for SVG and PNG (slide and report shapes) and for the numbers.'
+        else
+          "The chart is attached as an interactive page#{output == 'png' ? ' (a PNG could not be made on this server)' : ''}, with download links for SVG and PNG (slide and report shapes) " \
+            'and for the numbers. Describe it in a sentence and mention anything under excluded; if you cannot display it, give the numbers in text.'
+        end
       end
     end
 
@@ -98,7 +117,8 @@ module Mcp
         shape: slide (16:9, default) or report (3:2); the other is always offered as a download. top_n: how many categories
         to show (default 8); the smallest are merged into "Other".
         The picture has a caption saying what was asked and as of when, and download links (SVG, PNG, the numbers).
-        Do not set output unless the user asks for an image attachment (then png).
+        By default the chart comes as a PNG image the user can download. Set output html only if the user wants the interactive
+        page (hover details, SVG downloads in both shapes, the numbers); set shape report for a Word column.
 
         Examples:
           members by gender at each year end: {"form":"member","group_by":["member_gender"],"over_time":{"mode":"active_at_end","start_field":"member_start_date","end_field":"member_end_date"},"title":"Members by gender"}
@@ -117,7 +137,7 @@ module Mcp
       param :title, type: 'string', description: 'Heading of the chart'
       param :y_label, type: 'string', description: 'What the numbers are, shown above the axis (default: derived)'
       param :top_n, type: 'integer', description: 'Most categories shown, the rest merged into Other (default 8)'
-      param :output, type: 'string', enum: ChartSupport::OUTPUTS, description: 'html (default). png only if the user asks for an image attachment'
+      param :output, type: 'string', enum: ChartSupport::OUTPUTS, description: 'png (default): an image attachment, the cheapest. html: the interactive page with downloads. both'
 
       def self.run(args)
         raise ToolError, 'over_time is required for this chart: say how the years are laid out (mode by_date, active_at_end, active_during or spread). For numbers without years use chart_breakdown.' if args['over_time'].nil?

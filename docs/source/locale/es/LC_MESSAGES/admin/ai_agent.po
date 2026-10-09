@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CBGP-Databases 0.9.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 21:38+0200\n"
+"POT-Creation-Date: 2026-10-09 22:05+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -343,28 +343,36 @@ msgid ""
 "Every chart is drawn in two shapes from the same data, sized so the "
 "finished image has exactly that proportion, title and caption included: a"
 " wide **slide** (16:9) and a **report** column (3:2) for a Word document."
-" The page shows one; under it are links to download **both** as SVG (a "
-"vector file that opens in any drawing or slide program) and as PNG, and "
-"the **numbers** behind the chart as a tab-separated file that opens in "
-"Excel. The PNG link appears only where the page is allowed to run its own"
-" small script: in a saved copy of the page, or one opened on its own, but"
-" not inside a chat window that blocks scripts. If you want the agent to "
-"hand over a PNG as an attachment instead, ask it for \"an image\"."
+" By default the agent hands the chart over as a **PNG image** in the "
+"shape asked for (ask for \"the report shape\" for a Word column), which "
+"you download like any picture; an image is also the cheapest way to "
+"deliver a chart (see below). If you want the interactive page instead, "
+"ask for it: it shows one shape, and under it are links to download "
+"**both** as SVG (a vector file that opens in any drawing or slide "
+"program) and as PNG, and the **numbers** behind the chart as a tab-"
+"separated file that opens in Excel. The page's own PNG link appears only "
+"where the page is allowed to run its small script: in a saved copy of the"
+" page, or one opened on its own, but not inside a chat window that blocks"
+" scripts."
 msgstr ""
 "Cada gráfico se dibuja en dos formatos a partir de los mismos datos, "
 "dimensionados de modo que la imagen final tenga exactamente esa "
 "proporción, con título y pie incluidos: una **diapositiva** apaisada "
-"(16:9) y una columna de **informe** (3:2) para un documento de Word. La "
-"página muestra uno; debajo hay enlaces para descargar **ambos** como SVG "
-"(un archivo vectorial que se abre en cualquier programa de dibujo o de "
-"presentaciones) y como PNG, y los **datos** del gráfico como archivo "
-"separado por tabuladores que se abre en Excel. El enlace PNG aparece solo"
-" donde la página puede ejecutar su pequeño script: en una copia guardada "
-"de la página, o abierta por separado, pero no dentro de una ventana de "
-"chat que bloquee scripts. Si se quiere que el agente entregue un PNG como"
-" archivo adjunto, basta pedirle «una imagen»."
+"(16:9) y una columna de **informe** (3:2) para un documento de Word. Por "
+"defecto el agente entrega el gráfico como una **imagen PNG** en el "
+"formato pedido (se puede pedir «el formato de informe» para una columna "
+"de Word), que se descarga como cualquier imagen; una imagen es además la "
+"forma más barata de entregar un gráfico (véase más abajo). Si se prefiere"
+" la página interactiva, basta pedirla: muestra un formato, y debajo hay "
+"enlaces para descargar **ambos** como SVG (un archivo vectorial que se "
+"abre en cualquier programa de dibujo o de presentaciones) y como PNG, y "
+"los **datos** del gráfico como archivo separado por tabuladores que se "
+"abre en Excel. El enlace PNG de la propia página aparece solo donde la "
+"página puede ejecutar su pequeño script: en una copia guardada de la "
+"página, o abierta por separado, pero no dentro de una ventana de chat que"
+" bloquee scripts."
 
-#: ../../source/admin/ai_agent.md:122 4fb5b901094f467cbfacec09b4d12873
+#: ../../source/admin/ai_agent.md:124 4fb5b901094f467cbfacec09b4d12873
 msgid ""
 "The same applies to **timelines**: bars for things with a start and an "
 "end, a diamond for a single date, a bar that runs on to today for "
@@ -376,23 +384,23 @@ msgstr ""
 "lo que sigue en curso, una línea discontinua que marca hoy y filas "
 "agrupadas en bandas con nombre."
 
-#: ../../source/admin/ai_agent.md:125 42ad0f69fb524cff8fc88b63ad7c55ff
+#: ../../source/admin/ai_agent.md:127 42ad0f69fb524cff8fc88b63ad7c55ff
 msgid ""
 "Making a PNG on the server needs the `rsvg-convert` program and a font. "
 "The supplied Docker image includes both (`librsvg2-bin` and `fonts-"
-"dejavu-core`); on a server without them an attachment request quietly "
-"falls back to the page."
+"dejavu-core`); on a server without them the chart quietly comes as the "
+"interactive page instead."
 msgstr ""
 "Generar un PNG en el servidor requiere el programa `rsvg-convert` y una "
 "tipografía. La imagen Docker suministrada incluye ambos (`librsvg2-bin` y"
-" `fonts-dejavu-core`); en un servidor que no los tenga, una petición de "
-"archivo adjunto recurre sin avisar a la página."
+" `fonts-dejavu-core`); en un servidor que no los tenga, el gráfico llega,"
+" sin avisar, como página interactiva."
 
-#: ../../source/admin/ai_agent.md:128 a653c5d8fbbe41cb897a4f5097eb735e
+#: ../../source/admin/ai_agent.md:130 a653c5d8fbbe41cb897a4f5097eb735e
 msgid "Branding the charts"
 msgstr "Imagen de marca de los gráficos"
 
-#: ../../source/admin/ai_agent.md:130 2570ef9f91ae4218a7bb05c7d3c967d9
+#: ../../source/admin/ai_agent.md:132 2570ef9f91ae4218a7bb05c7d3c967d9
 msgid ""
 "Colours, font and a footer line come from a small file, not from the code"
 " and not from the ontology. Copy `theme/theme.example.yml` to "
@@ -408,7 +416,7 @@ msgstr ""
 "compose monta la carpeta (`./theme:/server/theme:ro`); se puede indicar "
 "otra ubicación con `CBGP_THEME_FILE`."
 
-#: ../../source/admin/ai_agent.md:143 ca0326764f9e48cfac8961fcffc352ff
+#: ../../source/admin/ai_agent.md:145 ca0326764f9e48cfac8961fcffc352ff
 msgid ""
 "**`series`** are the colours of the categories of a chart, in order (up "
 "to 24). The default starts with CBGP green (`#007336`, `#68af27` and the "
@@ -422,7 +430,7 @@ msgstr ""
 "colores elegidos para distinguirse de los verdes y entre sí, también para"
 " personas daltónicas: ocho categorías no pueden ser todas verdes."
 
-#: ../../source/admin/ai_agent.md:146 02001ff58db74db3bc036bdcb4a86891
+#: ../../source/admin/ai_agent.md:148 02001ff58db74db3bc036bdcb4a86891
 msgid ""
 "**`categories`** fixes the colour of a named category, wherever it "
 "appears, so \"European\" is the same colour in every chart. The name "
@@ -432,7 +440,7 @@ msgstr ""
 "que aparezca, de modo que «European» sea del mismo color en todos los "
 "gráficos. El nombre ignora mayúsculas y acentos."
 
-#: ../../source/admin/ai_agent.md:148 23bf4e55af6947d3b175442b9b74d6f5
+#: ../../source/admin/ai_agent.md:150 23bf4e55af6947d3b175442b9b74d6f5
 msgid ""
 "**`colors`** are the page colours; `dark` takes the same keys for a "
 "viewer whose system is in dark mode (a dark brand colour is lightened "
@@ -445,7 +453,7 @@ msgstr ""
 "desaparezca). El texto sobre una barra de color es blanco o casi negro, "
 "según lo que se lea mejor sobre ese color."
 
-#: ../../source/admin/ai_agent.md:151 35aeeaf8f650431eb2c2c93706dbda27
+#: ../../source/admin/ai_agent.md:153 35aeeaf8f650431eb2c2c93706dbda27
 msgid ""
 "**`footer`** is printed under every chart, and inside the downloaded SVG "
 "and PNG."
@@ -453,7 +461,7 @@ msgstr ""
 "**`footer`** se imprime bajo cada gráfico, y también dentro del SVG y del"
 " PNG descargados."
 
-#: ../../source/admin/ai_agent.md:153 c51dfd00da0b4c36860f73609cdce0c6
+#: ../../source/admin/ai_agent.md:155 c51dfd00da0b4c36860f73609cdce0c6
 msgid ""
 "The file is untrusted text that ends up inside pictures, so every value "
 "is checked: colours must be `#rgb` or `#rrggbb`, the font a plain list of"
@@ -468,11 +476,11 @@ msgstr ""
 "en el registro, de modo que un error tipográfico nunca impide dibujar un "
 "gráfico."
 
-#: ../../source/admin/ai_agent.md:157 040178307d8643ac9c4ae35f276dca2e
+#: ../../source/admin/ai_agent.md:159 040178307d8643ac9c4ae35f276dca2e
 msgid "What the tools cost"
 msgstr "Qué cuestan las herramientas"
 
-#: ../../source/admin/ai_agent.md:159 b24a760637c945fa91afc1c1a173a077
+#: ../../source/admin/ai_agent.md:161 b24a760637c945fa91afc1c1a173a077
 msgid ""
 "The agent is billed by the amount of text it reads, so each tool has a "
 "cost, and there are two kinds. The figures below are measured on this "
@@ -487,7 +495,7 @@ msgstr ""
 "caracteres divididos entre cuatro, que es aproximado, así que conviene "
 "leerlas como **tamaños relativos**."
 
-#: ../../source/admin/ai_agent.md:163 398cc820e23849a48ab845d3771c2b77
+#: ../../source/admin/ai_agent.md:165 398cc820e23849a48ab845d3771c2b77
 msgid ""
 "**Fixed cost.** The definition of every tool (name, description, "
 "parameters) is sent to the model with *every* request it makes, and "
@@ -528,16 +536,16 @@ msgid "chart_over_time"
 msgstr "chart_over_time"
 
 #: ../../source/admin/ai_agent.md c73c3cc4a00f4f4dba790369e85e6848
-msgid "~1190"
-msgstr "~1190"
+msgid "~1230"
+msgstr "~1230"
 
 #: ../../source/admin/ai_agent.md 5c2d5ab99c404bf1b6f5d05846ca7a55
 msgid "chart_breakdown"
 msgstr "chart_breakdown"
 
 #: ../../source/admin/ai_agent.md c6fad78863a840fe864c1b03252db542
-msgid "~1040"
-msgstr "~1040"
+msgid "~1090"
+msgstr "~1090"
 
 #: ../../source/admin/ai_agent.md 995d8cd0816d45909f648cd2ae1f3021
 msgid "render_timeline"
@@ -584,26 +592,31 @@ msgid "all tools together"
 msgstr "todas las herramientas juntas"
 
 #: ../../source/admin/ai_agent.md 94bd285eef8742e1bd55bfc544c5f596
-msgid "~7100"
-msgstr "~7100"
+msgid "~7190"
+msgstr "~7190"
 
-#: ../../source/admin/ai_agent.md:180 228a19a8afe24dee928c655ceb244b6e
+#: ../../source/admin/ai_agent.md:182 228a19a8afe24dee928c655ceb244b6e
 msgid ""
 "**Cost per call.** A call returns a short text for the model (a few "
-"hundred tokens at most). A chart or timeline also returns a *page*. "
-"Whether the agent program passes that page on to the model, or only shows"
-" it to the person, depends on the program; the middle column is what it "
-"would cost if it did. The page is about four times the size of one "
-"picture, because it carries the picture and downloadable copies of both "
-"shapes."
+"hundred tokens at most). A chart or timeline can also return a *page*. "
+"Some agent programs keep that page in the conversation and send it again "
+"with every later request, so a page can be the largest cost of a "
+"conversation about a chart; an image attachment, by contrast, is kept as "
+"a file and the model reads only its name, which is why a PNG image is the"
+" default. The middle column is what a page would cost if it were passed "
+"on. A page is about four times the size of one picture, because it "
+"carries the picture and downloadable copies of both shapes."
 msgstr ""
 "**Coste por llamada.** Una llamada devuelve un texto breve para el modelo"
 " (unos pocos cientos de tokens como mucho). Un gráfico o una cronología "
-"devuelve además una *página*. Que el programa del agente pase esa página "
-"al modelo, o solo se la muestre a la persona, depende del programa; la "
-"columna central es lo que costaría si lo hiciera. La página tiene unas "
-"cuatro veces el tamaño de una imagen, porque lleva la imagen y copias "
-"descargables de los dos formatos."
+"puede devolver además una *página*. Algunos programas de agente conservan"
+" esa página en la conversación y la reenvían con cada petición posterior,"
+" de modo que una página puede ser el mayor coste de una conversación "
+"sobre un gráfico; una imagen adjunta, en cambio, se guarda como archivo y"
+" el modelo solo lee su nombre, y por eso la imagen PNG es la opción "
+"predeterminada. La columna central es lo que costaría una página si se "
+"pasara al modelo. Una página tiene unas cuatro veces el tamaño de una "
+"imagen, porque lleva la imagen y copias descargables de los dos formatos."
 
 #: ../../source/admin/ai_agent.md 7012fa227694439bbeaa1732066239a0
 msgid "Call"
@@ -620,6 +633,22 @@ msgstr "Página (si el cliente la pasa al modelo)"
 #: ../../source/admin/ai_agent.md 69d8279bc07c4488829b4fbfd1be7907
 msgid "One SVG file"
 msgstr "Un archivo SVG"
+
+#: ../../source/admin/ai_agent.md b96425b31fbe4f92ae07f35fda9d04f7
+msgid "any chart as a PNG attachment (the default)"
+msgstr "cualquier gráfico como imagen PNG adjunta (la opción predeterminada)"
+
+#: ../../source/admin/ai_agent.md 9d741aaed33f488bbf500d5d895f34b7
+msgid "~150"
+msgstr "~150"
+
+#: ../../source/admin/ai_agent.md 1aef54fd81344808a56786e62845402d
+msgid "- (a file; the model reads only its name)"
+msgstr "- (un archivo; el modelo solo lee su nombre)"
+
+#: ../../source/admin/ai_agent.md 6cd56eb05e8d4128bc72f8b31beb8922
+msgid "-"
+msgstr "-"
 
 #: ../../source/admin/ai_agent.md 457f68b7f75b48868acbd551a6e9b32c
 msgid "chart_over_time, bars, 12 years, 1 series"
@@ -642,7 +671,7 @@ msgid "chart_over_time, lines, 12 years, 2 series"
 msgstr "chart_over_time, líneas, 12 años, 2 series"
 
 #: ../../source/admin/ai_agent.md 71a8e569d39149db830eea28318e67ec
-#: b3cb73af98294d718fedc3a9991c8022 b92c62466bbe4bddaee14e147c13c6e4
+#: b3cb73af98294d718fedc3a9991c8022
 msgid "~140"
 msgstr "~140"
 
@@ -738,28 +767,25 @@ msgstr "~80"
 msgid "~2590"
 msgstr "~2590"
 
-#: ../../source/admin/ai_agent.md 6cd56eb05e8d4128bc72f8b31beb8922
-msgid "-"
-msgstr "-"
-
 #: ../../source/admin/ai_agent.md:196 8ea59d98034e445faf01c73399749854
 msgid ""
 "What drives the cost, in order: the **number of categories** (series) in "
 "a chart, then the number of points on the axis, then the kind of chart "
 "(bars are the cheapest, lines a little more, stacked charts the most). A "
 "PNG attachment is an image and costs as one. To keep costs down: ask for "
-"fewer categories (`top_n` merges the smallest into \"Other\"), leave "
-"charts as pages rather than attachments unless an image is needed, and do"
-" not add a tool for something an existing one can already do."
+"fewer categories (`top_n` merges the smallest into \"Other\"), keep "
+"charts as image attachments rather than interactive pages unless the page"
+" is needed, and do not add a tool for something an existing one can "
+"already do."
 msgstr ""
 "Lo que más influye en el coste, por orden: el **número de categorías** "
 "(series) de un gráfico, luego el número de puntos del eje y luego el tipo"
 " de gráfico (las barras son lo más barato, las líneas algo más y los "
-"gráficos apilados lo más caro). Un archivo adjunto PNG es una imagen y "
-"cuesta como tal. Para contener el coste: pedir menos categorías (`top_n` "
-"reúne las más pequeñas en «Otros»), dejar los gráficos como páginas y no "
-"como archivos adjuntos salvo que haga falta una imagen, y no añadir una "
-"herramienta para algo que una existente ya puede hacer."
+"gráficos apilados lo más caro). Para contener el coste: pedir menos "
+"categorías (`top_n` reúne las más pequeñas en «Otros»), dejar los "
+"gráficos como imágenes adjuntas y no como páginas interactivas salvo que "
+"haga falta la página, y no añadir una herramienta para algo que una "
+"existente ya puede hacer."
 
 #: ../../source/admin/ai_agent.md:201 09f0a9b72cbf4cb8bb0341ed8700fb5c
 msgid "Languages"
@@ -819,4 +845,13 @@ msgstr ""
 
 #~ msgid "Timelines and saving the picture"
 #~ msgstr "Cronologías y cómo guardar la imagen"
+
+#~ msgid "~1190"
+#~ msgstr "~1190"
+
+#~ msgid "~1040"
+#~ msgstr "~1040"
+
+#~ msgid "~7100"
+#~ msgstr "~7100"
 

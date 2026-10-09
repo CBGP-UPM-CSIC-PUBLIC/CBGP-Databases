@@ -21,7 +21,8 @@ module Mcp
         within each bar, use stacked for absolute numbers). More than 12 categories on the axis: the smallest are merged
         into "Other". shape: slide (16:9, default) or report (3:2); the other is always offered as a download.
         The picture has a caption saying what was asked and as of when, and download links (SVG, PNG, the numbers).
-        Do not set output unless the user asks for an image attachment (then png).
+        By default the chart comes as a PNG image the user can download. Set output html only if the user wants the interactive
+        page (hover details, SVG downloads in both shapes, the numbers); set shape report for a Word column.
 
         Examples:
           gender balance by category of people here now: {"form":"member","group_by":["member_category","member_gender"],"where":[{"field":"member_start_date","op":"on_or_before","value":"today"},{"field":"member_end_date","op":"on_or_after","value":"today","or_empty":true}],"title":"Gender balance by category"}
@@ -37,7 +38,7 @@ module Mcp
       param :title, type: 'string', description: 'Heading of the chart'
       param :y_label, type: 'string', description: 'What the numbers are, shown above the axis (default: derived)'
       param :top_n, type: 'integer', description: 'Most split categories shown, the rest merged into Other (default 8)'
-      param :output, type: 'string', enum: ChartSupport::OUTPUTS, description: 'html (default). png only if the user asks for an image attachment'
+      param :output, type: 'string', enum: ChartSupport::OUTPUTS, description: 'png (default): an image attachment, the cheapest. html: the interactive page with downloads. both'
 
       def self.run(args)
         groups = Array(args['group_by']).flatten.compact.map(&:to_s).reject { |g| g.strip.empty? }

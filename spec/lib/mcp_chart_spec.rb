@@ -253,11 +253,14 @@ RSpec.describe Mcp::Tools::ChartOverTime do
   end
   let(:query) { { 'form' => 'member', 'group_by' => ['member_gender'], 'over_time' => { 'mode' => 'active_at_end', 'start_field' => 'member_start_date' }, 'title' => 'Members by gender' } }
 
+  let(:png) { "\x89PNG\r\n\x1a\nxx".b }
+
   before do
     allow(Mcp::Records::Context).to receive(:new).and_wrap_original do |original|
       original.call.tap { |c| allow(c).to receive(:form!).and_return(Mcp::Records::FormInfo.new(name: 'member', storage: 'member', label: 'Member')) }
     end
     allow(Mcp::Aggregation).to receive(:run).and_return(data)
+    allow(Mcp::Widgets::Raster).to receive(:png).and_return(png)
   end
 
   def run(extra = {})
@@ -265,9 +268,25 @@ RSpec.describe Mcp::Tools::ChartOverTime do
     [content, JSON.parse(content.first[:text])]
   end
 
-  it 'passes the query to the aggregation, and draws what comes back' do
-    expect(Mcp::Aggregation).to receive(:run).with(hash_including(group_by: ['member_gender'], over_time: query['over_time'])).and_return(data)
+  it 'gives a PNG image by default, the cheapest way to deliver a picture: no page, just the image and a short text' do
     content, summary = run
+    expect(content.map { |b| b[:type] }).to eq(%w[text image])
+    expect(content.last).to eq(type: 'image', data: Base64.strict_encode64(png), mimeType: 'image/png')
+    expect(summary['attached']).to eq('html' => false, 'png' => true)
+    expect(summary['note']).to include('PNG image', 'shape report', 'output html')
+    expect(content.first[:text].length).to be < 1500 # what the model reads stays small
+  end
+
+  it 'draws the PNG at twice the picture\'s own width, whichever shape' do
+    expect(Mcp::Widgets::Raster).to receive(:png).with(anything, hash_including(width: 1920)).and_return(png)
+    run
+    expect(Mcp::Widgets::Raster).to receive(:png).with(anything, hash_including(width: 1440)).and_return(png)
+    run('shape' => 'report')
+  end
+
+  it 'passes the query to the aggregation, and draws what comes back (the interactive page, when asked for)' do
+    expect(Mcp::Aggregation).to receive(:run).with(hash_including(group_by: ['member_gender'], over_time: query['over_time'])).and_return(data)
+    content, summary = run('output' => 'html')
     expect(content.map { |b| b[:type] }).to eq(%w[text resource])
     html = content.last[:resource][:text]
     expect(content.last[:resource][:uri]).to start_with('ui://chart/')
@@ -277,7 +296,7 @@ RSpec.describe Mcp::Tools::ChartOverTime do
   end
 
   it 'says in the caption what was asked, as of when, and what was left out' do
-    html = run[0].last[:resource][:text]
+    html = run('output' => 'html')[0].last[:resource][:text]
     expect(html).to include('Count of Member records by Gender', 'on the books at the end of each year',
                             'Data as of 2026-10-09; 924 records read', 'Left out for lacking a needed field: 5 (no member_start_date)',
                             'The current year (') # an end-of-year headcount warns that the year in progress is partial
@@ -292,25 +311,27 @@ RSpec.describe Mcp::Tools::ChartOverTime do
   end
 
   it 'honours the shape, the title heading and a custom axis label' do
-    html = run('shape' => 'report', 'y_label' => 'Heads')[0].last[:resource][:text]
+    html = run('shape' => 'report', 'y_label' => 'Heads', 'output' => 'html')[0].last[:resource][:text]
     expect(html).to include('Heads', 'Download SVG (slide 16:9)')
   end
 
   it 'draws in the language asked for' do
-    html = run('language' => 'es')[0].last[:resource][:text]
+    html = run('language' => 'es', 'output' => 'html')[0].last[:resource][:text]
     expect(html).to include('Datos a fecha', 'Descargar los datos')
   end
 
-  it 'returns a PNG attachment instead of the page when asked and possible' do
-    allow(Mcp::Widgets::Raster).to receive(:png).and_return("\x89PNG\r\n\x1a\nxx".b)
-    content, summary = run('output' => 'png')
-    expect(content.map { |b| b[:type] }).to eq(%w[text image])
-    expect(summary['attached']).to eq('html' => false, 'png' => true)
+  it 'attaches both the page and the image for both' do
+    content, summary = run('output' => 'both')
+    expect(content.map { |b| b[:type] }).to eq(%w[text resource image])
+    expect(summary['attached']).to eq('html' => true, 'png' => true)
   end
 
-  it 'falls back to the page when a PNG was asked for but cannot be made' do
+  it 'falls back to the page when no PNG can be made on the server, and says so' do
     allow(Mcp::Widgets::Raster).to receive(:png).and_return(nil)
-    expect(run('output' => 'png')[0].map { |b| b[:type] }).to eq(%w[text resource])
+    content, summary = run
+    expect(content.map { |b| b[:type] }).to eq(%w[text resource])
+    expect(summary['attached']).to eq('html' => true, 'png' => false)
+    expect(summary['note']).to include('PNG could not be made')
   end
 
   it 'asks for over_time, pointing to the other tool' do
@@ -318,7 +339,7 @@ RSpec.describe Mcp::Tools::ChartOverTime do
   end
 
   it 'refuses an unknown output' do
-    expect { run('output' => 'gif') }.to raise_error(Mcp::ToolError, /output must be one of: html, png, both/)
+    expect { run('output' => 'gif') }.to raise_error(Mcp::ToolError, /output must be one of: png, html, both/)
   end
 
   it 'describes itself for a small model: a question-shaped summary and the query fields' do
@@ -339,6 +360,7 @@ RSpec.describe Mcp::Tools::ChartBreakdown do
       original.call.tap { |c| allow(c).to receive(:form!).and_return(Mcp::Records::FormInfo.new(name: 'member', storage: 'member', label: 'Member')) }
     end
     allow(Mcp::Aggregation).to receive(:run).and_return(data)
+    allow(Mcp::Widgets::Raster).to receive(:png).and_return("\x89PNG\r\n\x1a\nxx".b)
   end
 
   def run(args = {})
@@ -364,7 +386,7 @@ RSpec.describe Mcp::Tools::ChartBreakdown do
   end
 
   it 'has no years in its caption and needs a group' do
-    expect(run[0].last[:resource][:text]).to include('Count of Member records by Category / Gender')
+    expect(run('output' => 'html')[0].last[:resource][:text]).to include('Count of Member records by Category / Gender')
     expect { described_class.invoke('form' => 'member') }.to raise_error(Mcp::ToolError, /Missing required argument\(s\): group_by/)
     expect { described_class.run('form' => 'member', 'group_by' => ['']) }.to raise_error(Mcp::ToolError, /group_by is required.*chart_over_time/)
   end

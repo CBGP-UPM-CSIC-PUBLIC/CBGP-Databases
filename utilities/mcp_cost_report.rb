@@ -6,6 +6,7 @@
 #
 #   ruby utilities/mcp_cost_report.rb            # plain text
 #   ruby utilities/mcp_cost_report.rb --markdown # tables to paste into the docs
+#   (add --verbose to see the application's own log lines)
 #
 # Two kinds of cost:
 #   * FIXED: every tool's definition (name, description, parameters) is sent to the model with every request it
@@ -24,7 +25,7 @@ ENV['CBGP_USERS'] ||= '{"x":{"password":"x","role":"user"}}'
 ENV['CBGP_SECRET'] ||= 'x' * 64
 require_relative '../app/controllers/application_controller'
 
-$stderr.reopen(File::NULL) unless ENV['VERBOSE']
+$stderr.reopen(File::NULL) unless ARGV.include?('--verbose') # the application is chatty on stderr
 MARKDOWN = ARGV.include?('--markdown')
 
 def tokens(chars) = (chars / 4.0).round(-1).to_i.clamp(10, Float::INFINITY)
@@ -69,9 +70,10 @@ rows = samples.map do |label, points, series, style, years|
   text = JSON.generate(x: tbl.x_labels, series: tbl.series.map { |s| { label: s[:label], values: s[:values] } }, style: style, note: 'x' * 260)
   [label, "~#{tokens(text.length)}", "~#{tokens(out[:html].length)}", "~#{tokens(out[:svg].length)}"]
 end
+rows.unshift(['any chart as a PNG attachment (the default)', "~#{tokens(JSON.generate(x: Array.new(12, 'x'), series: [{ label: 'Series', values: Array.new(12, 1.0) }], note: 'x' * 430).length)}", '- (a file; the model reads only its name)', '-'])
 rows << ['render_timeline, 7 rows', "~#{tokens(300)}",
          "~#{tokens(Mcp::Widgets::Timeline.render(rows: (2020..2026).map { |y| { 'label' => "Project #{y}", 'start' => "#{y}-01-01", 'end' => "#{y}-12-31", 'lane' => 'Funding' } })[:html].length)}", '-']
 table('Per call: what one chart costs', ['Call', 'Text the model reads', 'Page (if the client passes it on)', 'One SVG file'], rows)
 
-puts "\nA PNG attachment (output png) is an image: its cost to the model is that of a picture, not of its bytes." unless MARKDOWN
+puts "\nA PNG attachment is kept by the agent program as a file: the model reads its name, not its bytes." unless MARKDOWN
 puts "\nTokens are characters / 4 (a rough rule); see the notes at the top of this file." unless MARKDOWN
