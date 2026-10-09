@@ -63,6 +63,10 @@ services:
       - VIRTUOSO_HISTORY_HOST=virtuoso-history:8890
     ports:
       - 127.0.0.1:8000:4567
+    # Branding for charts: edit theme/theme.yml (copy theme/theme.example.yml) next to this file; it is
+    # read again whenever it changes, no restart needed. Missing = the built-in CBGP look.
+    volumes:
+      - ./theme:/server/theme:ro
     networks:
       - cbgp-default
 

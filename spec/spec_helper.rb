@@ -48,6 +48,8 @@ ENV['VIRTUOSO_USER']         ||= 'test'
 ENV['VIRTUOSO_PASS']         ||= 'test'
 ENV['VIRTUOSO_HISTORY_HOST'] ||= 'localhost:8891'
 ENV['CBGP_KB'] ||= resolve_ontology_source
+# Charts use the built-in theme in specs, whatever theme/theme.yml a developer has.
+ENV['CBGP_THEME_FILE'] ||= File.join(__dir__, 'fixtures', 'no-such-theme.yml')
 
 # Normally defined in app/controllers/application_controller.rb; redefined
 # here so lib/ files can be exercised standalone without booting the full
@@ -81,6 +83,7 @@ require_relative '../lib/loaders'
 require_relative '../lib/related_records'
 require_relative '../lib/mcp/server'
 require_relative '../lib/mcp/records'
+require_relative '../lib/mcp/theme'
 require_relative '../lib/mcp/widgets/timeline'
 Dir[File.join(__dir__, '../lib/mcp/tools/*.rb')].sort.each { |file| require file }
 

@@ -90,7 +90,7 @@ RSpec.describe Mcp::Widgets::Timeline, 'label placement' do
   let(:today) { Date.new(2026, 10, 8) }
 
   def labels(rows)
-    described_class.render(rows: rows, today: today)[:html].scan(%r{<text class="(lbl[^"]*)" x="([\d.]+)"[^>]*text-anchor="(\w+)">([^<]*)</text>})
+    described_class.render(rows: rows, today: today)[:html].scan(%r{<text class="(lbl[^"]*)" x="([\d.]+)"[^>]*text-anchor="(\w+)"[^>]*>([^<]*)</text>})
   end
 
   it 'never starts a label left of the lane-name gutter' do
