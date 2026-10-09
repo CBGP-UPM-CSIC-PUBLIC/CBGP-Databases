@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CBGP-Databases 0.9.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 10:54+0200\n"
+"POT-Creation-Date: 2026-10-09 21:38+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -107,7 +107,8 @@ msgstr ""
 msgid "What the agent can do"
 msgstr "Qué puede hacer el agente"
 
-#: ../../source/admin/ai_agent.md b9ff4f6f01bb48dc9611eca7d31be662
+#: ../../source/admin/ai_agent.md 119a69d11fcf4eab9e94cd85b710ea8f
+#: b9ff4f6f01bb48dc9611eca7d31be662
 msgid "Tool"
 msgstr "Herramienta"
 
@@ -161,6 +162,36 @@ msgstr "`record_history`"
 msgid "How one record changed over time, field by field"
 msgstr "Cómo cambió un registro a lo largo del tiempo, campo por campo"
 
+#: ../../source/admin/ai_agent.md 6d75ac48d2994aa0ba453eed0328b22e
+msgid "`aggregate`"
+msgstr "`aggregate`"
+
+#: ../../source/admin/ai_agent.md cf5a0778cee9488eb1fad51f1866ca46
+msgid ""
+"Count or add up records by category and by calendar year (headcount at "
+"year end, funding per year, papers per year)"
+msgstr ""
+"Contar o sumar registros por categoría y por año natural (plantilla a "
+"final de año, financiación por año, artículos por año)"
+
+#: ../../source/admin/ai_agent.md 995d8cd0816d45909f648cd2ae1f3021
+msgid "`chart_over_time`"
+msgstr "`chart_over_time`"
+
+#: ../../source/admin/ai_agent.md ad9102db59bc4196994c3a8f85e116c3
+msgid "Draw how a number changes over the years, split by category"
+msgstr ""
+"Dibujar cómo cambia una cifra a lo largo de los años, dividida por "
+"categoría"
+
+#: ../../source/admin/ai_agent.md b852604f5528471b9a4bd4d0aa3bf9f4
+msgid "`chart_breakdown`"
+msgstr "`chart_breakdown`"
+
+#: ../../source/admin/ai_agent.md 854d6c6ee10c46c894e1ddb5ba7fa9f6
+msgid "Draw what a number is made up of, by category"
+msgstr "Dibujar de qué se compone una cifra, por categoría"
+
 #: ../../source/admin/ai_agent.md 995d8cd0816d45909f648cd2ae1f3021
 msgid "`render_timeline`"
 msgstr "`render_timeline`"
@@ -169,7 +200,7 @@ msgstr "`render_timeline`"
 msgid "Draw a timeline of dated facts the agent gathered"
 msgstr "Dibujar una cronología de hechos fechados que el agente ha reunido"
 
-#: ../../source/admin/ai_agent.md:57 d64aefcce4e44f94b9894974d68d60d5
+#: ../../source/admin/ai_agent.md:60 d64aefcce4e44f94b9894974d68d60d5
 msgid ""
 "The agent is told to use these before searching the web for anything "
 "about the institute's own people, projects, publications or funding, and "
@@ -183,7 +214,7 @@ msgstr ""
 "lo que hay en la base de datos: si los registros están incompletos, la "
 "respuesta también lo estará, y un buen agente lo dice."
 
-#: ../../source/admin/ai_agent.md:62 0d4c72e78a324b2999c8e4fdbfe25416
+#: ../../source/admin/ai_agent.md:65 0d4c72e78a324b2999c8e4fdbfe25416
 msgid ""
 "Only the staff-facing forms are offered. Forms that members use to submit"
 " information are not, because nobody queries them."
@@ -192,11 +223,11 @@ msgstr ""
 "los miembros para enviar información no se ofrecen, porque nadie los "
 "consulta."
 
-#: ../../source/admin/ai_agent.md:65 643de7eb805c4ce083085c04aad88942
+#: ../../source/admin/ai_agent.md:68 643de7eb805c4ce083085c04aad88942
 msgid "Describing your data for the agent"
 msgstr "Describir los datos para el agente"
 
-#: ../../source/admin/ai_agent.md:67 6ea74384916849eb90299ab5cf253b38
+#: ../../source/admin/ai_agent.md:70 6ea74384916849eb90299ab5cf253b38
 msgid ""
 "An agent chooses its tools by reading short descriptions, so it needs to "
 "know what the data *is*, and which everyday words mean which form (an "
@@ -211,7 +242,7 @@ msgstr ""
 "ontología, en el mismo lugar y de la misma manera que los nombres de los "
 "formularios, en **los dos idiomas**:"
 
-#: ../../source/admin/ai_agent.md:73 1e232d7dcd1541b585de153b60df6114
+#: ../../source/admin/ai_agent.md:76 1e232d7dcd1541b585de153b60df6114
 msgid ""
 "one `rdfs:comment` on the `cbgp:forms` class says what the whole dataset "
 "is;"
@@ -219,11 +250,11 @@ msgstr ""
 "un `rdfs:comment` en la clase `cbgp:forms` dice qué es el conjunto de "
 "datos en su totalidad;"
 
-#: ../../source/admin/ai_agent.md:74 5e42fe688b19415199a98d50a42d4a33
+#: ../../source/admin/ai_agent.md:77 5e42fe688b19415199a98d50a42d4a33
 msgid "one `rdfs:comment` on each form says what its records are."
 msgstr "un `rdfs:comment` en cada formulario dice qué son sus registros."
 
-#: ../../source/admin/ai_agent.md:88 7f7c1cc0ba0f45ff8105c0ca5ebdd2c6
+#: ../../source/admin/ai_agent.md:91 7f7c1cc0ba0f45ff8105c0ca5ebdd2c6
 msgid ""
 "Write the **first sentence** so that it stands alone: it is the only part"
 " shown in the agent's one-line list of forms. Say what the records are "
@@ -240,7 +271,7 @@ msgstr ""
 "precisa (como «personal actual»), se debe indicar aquí: el agente no la "
 "adivinará."
 
-#: ../../source/admin/ai_agent.md:94 56581cbccd7444d3aa8fa55d02f2a8b4
+#: ../../source/admin/ai_agent.md:97 56581cbccd7444d3aa8fa55d02f2a8b4
 msgid ""
 "`check_ontology.rb` warns about any form, or the dataset itself, that has"
 " no description in a language, so a form added later cannot go without "
@@ -252,60 +283,489 @@ msgstr ""
 "formulario añadido más adelante no puede quedarse sin ella. Un cambio "
 "llega al agente tras `/cbgp/refresh`, sin reiniciar."
 
-#: ../../source/admin/ai_agent.md:98 a653c5d8fbbe41cb897a4f5097eb735e
-msgid "Timelines and saving the picture"
-msgstr "Cronologías y cómo guardar la imagen"
+#: ../../source/admin/ai_agent.md:101 b9e86715639d4a9fb00901adc38d6f48
+msgid "Charts"
+msgstr "Gráficos"
 
-#: ../../source/admin/ai_agent.md:100 4fb5b901094f467cbfacec09b4d12873
+#: ../../source/admin/ai_agent.md:103 7fa47774d752443c9687ee4940d7019e
 msgid ""
-"When asked to show something over time, the agent draws a timeline: bars "
-"for things with a start and an end, a diamond for a single date, a bar "
-"that runs on to today for something still going, and a dashed line "
-"marking today. Rows are grouped into labelled bands, and hovering over a "
-"row shows its dates."
+"Two tools draw charts, and the agent picks one by the question being "
+"asked:"
 msgstr ""
-"Cuando se le pide mostrar algo a lo largo del tiempo, el agente dibuja "
-"una cronología: barras para lo que tiene inicio y fin, un rombo para una "
-"fecha única, una barra que llega hasta hoy para lo que sigue en curso, y "
-"una línea discontinua que marca hoy. Las filas se agrupan en bandas con "
-"nombre, y al pasar el ratón sobre una fila se ven sus fechas."
+"Dos herramientas dibujan gráficos, y el agente elige una según la "
+"pregunta que se le hace:"
 
-#: ../../source/admin/ai_agent.md:105 72e2a83de97942ce9c2f678d87864d5f
+#: ../../source/admin/ai_agent.md:105 1b8e6019fc494f4a8441e549b34b590e
 msgid ""
-"The picture can be saved from the timeline itself with **Download SVG** "
-"(a vector file that opens in any drawing program or slide deck) and "
-"**Download PNG** (an ordinary image). The PNG link appears only where the"
-" page is allowed to run its own small script: in a saved copy of the "
-"page, or one opened on its own, but not inside a chat window that blocks "
-"scripts. If you want the agent to hand over a PNG as an attachment "
-"instead, ask it for \"an image\", and it will request one."
+"**`chart_over_time`** answers \"how has X changed over the years, by "
+"category?\": headcount at the end of each year, funding per year by "
+"source, papers per year. Bars, stacked bars, 100% bars (shares), lines or"
+" areas."
 msgstr ""
-"La imagen se puede guardar desde la propia cronología con **Descargar "
-"SVG** (un archivo vectorial que se abre en cualquier programa de dibujo o"
-" presentación) y **Descargar PNG** (una imagen corriente). El enlace PNG "
-"aparece solo donde la página puede ejecutar su pequeño script: en una "
-"copia guardada de la página, o abierta por separado, pero no dentro de "
-"una ventana de chat que bloquee scripts. Si se quiere que el agente "
-"entregue un PNG como archivo adjunto, basta pedirle «una imagen» y la "
-"solicitará."
+"**`chart_over_time`** responde a «¿cómo ha cambiado X a lo largo de los "
+"años, por categoría?»: plantilla a final de cada año, financiación por "
+"año y por fuente, artículos por año. Barras, barras apiladas, barras al "
+"100 % (proporciones), líneas o áreas."
 
-#: ../../source/admin/ai_agent.md:112 42ad0f69fb524cff8fc88b63ad7c55ff
+#: ../../source/admin/ai_agent.md:107 b30f84e34ea74d63a059a438c0e6209c
+msgid ""
+"**`chart_breakdown`** answers \"what is X made up of?\": gender balance "
+"by category, funding mix, members by nationality."
+msgstr ""
+"**`chart_breakdown`** responde a «¿de qué se compone X?»: equilibrio de "
+"género por categoría, composición de la financiación, miembros por "
+"nacionalidad."
+
+#: ../../source/admin/ai_agent.md:109 264eaa3e0b444c91b425e27a5a85b259
+msgid ""
+"You do not give the tool numbers. You give it the *question* (which "
+"records, what to count or add up, how to split them, how the years are "
+"laid out) and the server computes the numbers and draws the chart, so no "
+"figure is ever retyped by a language model and the same question always "
+"gives the same chart. Each chart carries a **caption** saying what was "
+"asked, as of what date, how many records were read and how many were left"
+" out for lacking a needed field (for example members without a start "
+"date). A chart pasted into a report can be rebuilt next year from its "
+"caption."
+msgstr ""
+"No se le dan cifras a la herramienta. Se le da la *pregunta* (qué "
+"registros, qué contar o sumar, cómo dividirlos, cómo se distribuyen los "
+"años) y el servidor calcula las cifras y dibuja el gráfico, de modo que "
+"ningún modelo de lenguaje vuelve a teclear una cifra y la misma pregunta "
+"da siempre el mismo gráfico. Cada gráfico lleva un **pie** que dice qué "
+"se preguntó, a qué fecha, cuántos registros se leyeron y cuántos se "
+"excluyeron por faltar un dato necesario (por ejemplo, miembros sin fecha "
+"de inicio). Un gráfico pegado en un informe puede reconstruirse el año "
+"siguiente a partir de su pie."
+
+#: ../../source/admin/ai_agent.md:115 944b017bae7c4a0d917e94cca24fcdb8
+msgid ""
+"Every chart is drawn in two shapes from the same data, sized so the "
+"finished image has exactly that proportion, title and caption included: a"
+" wide **slide** (16:9) and a **report** column (3:2) for a Word document."
+" The page shows one; under it are links to download **both** as SVG (a "
+"vector file that opens in any drawing or slide program) and as PNG, and "
+"the **numbers** behind the chart as a tab-separated file that opens in "
+"Excel. The PNG link appears only where the page is allowed to run its own"
+" small script: in a saved copy of the page, or one opened on its own, but"
+" not inside a chat window that blocks scripts. If you want the agent to "
+"hand over a PNG as an attachment instead, ask it for \"an image\"."
+msgstr ""
+"Cada gráfico se dibuja en dos formatos a partir de los mismos datos, "
+"dimensionados de modo que la imagen final tenga exactamente esa "
+"proporción, con título y pie incluidos: una **diapositiva** apaisada "
+"(16:9) y una columna de **informe** (3:2) para un documento de Word. La "
+"página muestra uno; debajo hay enlaces para descargar **ambos** como SVG "
+"(un archivo vectorial que se abre en cualquier programa de dibujo o de "
+"presentaciones) y como PNG, y los **datos** del gráfico como archivo "
+"separado por tabuladores que se abre en Excel. El enlace PNG aparece solo"
+" donde la página puede ejecutar su pequeño script: en una copia guardada "
+"de la página, o abierta por separado, pero no dentro de una ventana de "
+"chat que bloquee scripts. Si se quiere que el agente entregue un PNG como"
+" archivo adjunto, basta pedirle «una imagen»."
+
+#: ../../source/admin/ai_agent.md:122 4fb5b901094f467cbfacec09b4d12873
+msgid ""
+"The same applies to **timelines**: bars for things with a start and an "
+"end, a diamond for a single date, a bar that runs on to today for "
+"something still going, a dashed line marking today, rows grouped into "
+"labelled bands."
+msgstr ""
+"Lo mismo vale para las **cronologías**: barras para lo que tiene inicio y"
+" fin, un rombo para una fecha única, una barra que llega hasta hoy para "
+"lo que sigue en curso, una línea discontinua que marca hoy y filas "
+"agrupadas en bandas con nombre."
+
+#: ../../source/admin/ai_agent.md:125 42ad0f69fb524cff8fc88b63ad7c55ff
 msgid ""
 "Making a PNG on the server needs the `rsvg-convert` program and a font. "
 "The supplied Docker image includes both (`librsvg2-bin` and `fonts-"
 "dejavu-core`); on a server without them an attachment request quietly "
-"falls back to the timeline page."
+"falls back to the page."
 msgstr ""
 "Generar un PNG en el servidor requiere el programa `rsvg-convert` y una "
 "tipografía. La imagen Docker suministrada incluye ambos (`librsvg2-bin` y"
 " `fonts-dejavu-core`); en un servidor que no los tenga, una petición de "
-"archivo adjunto recurre sin avisar a la página de la cronología."
+"archivo adjunto recurre sin avisar a la página."
 
-#: ../../source/admin/ai_agent.md:116 09f0a9b72cbf4cb8bb0341ed8700fb5c
+#: ../../source/admin/ai_agent.md:128 a653c5d8fbbe41cb897a4f5097eb735e
+msgid "Branding the charts"
+msgstr "Imagen de marca de los gráficos"
+
+#: ../../source/admin/ai_agent.md:130 2570ef9f91ae4218a7bb05c7d3c967d9
+msgid ""
+"Colours, font and a footer line come from a small file, not from the code"
+" and not from the ontology. Copy `theme/theme.example.yml` to "
+"`theme/theme.yml`, edit it, and the next chart drawn uses it, with no "
+"restart. In Docker the compose file mounts the folder "
+"(`./theme:/server/theme:ro`); another location can be named with "
+"`CBGP_THEME_FILE`."
+msgstr ""
+"Los colores, la tipografía y una línea de pie proceden de un pequeño "
+"archivo, no del código ni de la ontología. Se copia "
+"`theme/theme.example.yml` a `theme/theme.yml`, se edita, y el siguiente "
+"gráfico que se dibuje lo usa, sin reiniciar. En Docker, el archivo "
+"compose monta la carpeta (`./theme:/server/theme:ro`); se puede indicar "
+"otra ubicación con `CBGP_THEME_FILE`."
+
+#: ../../source/admin/ai_agent.md:143 ca0326764f9e48cfac8961fcffc352ff
+msgid ""
+"**`series`** are the colours of the categories of a chart, in order (up "
+"to 24). The default starts with CBGP green (`#007336`, `#68af27` and the "
+"charcoal `#4c4c4c` were sampled from the CBGP logo), then colours chosen "
+"to stay apart from the greens and from each other, also for colour-blind "
+"readers: eight categories cannot all be green."
+msgstr ""
+"**`series`** son los colores de las categorías de un gráfico, en orden "
+"(hasta 24). Por defecto empieza con el verde CBGP (`#007336`; `#68af27` y"
+" el gris carbón `#4c4c4c` se tomaron del logotipo del CBGP), seguido de "
+"colores elegidos para distinguirse de los verdes y entre sí, también para"
+" personas daltónicas: ocho categorías no pueden ser todas verdes."
+
+#: ../../source/admin/ai_agent.md:146 02001ff58db74db3bc036bdcb4a86891
+msgid ""
+"**`categories`** fixes the colour of a named category, wherever it "
+"appears, so \"European\" is the same colour in every chart. The name "
+"ignores case and accents."
+msgstr ""
+"**`categories`** fija el color de una categoría con nombre, dondequiera "
+"que aparezca, de modo que «European» sea del mismo color en todos los "
+"gráficos. El nombre ignora mayúsculas y acentos."
+
+#: ../../source/admin/ai_agent.md:148 23bf4e55af6947d3b175442b9b74d6f5
+msgid ""
+"**`colors`** are the page colours; `dark` takes the same keys for a "
+"viewer whose system is in dark mode (a dark brand colour is lightened "
+"automatically on a dark page, so it does not vanish). Text on a coloured "
+"bar is white or near-black, whichever reads better on that colour."
+msgstr ""
+"**`colors`** son los colores de la página; `dark` admite las mismas "
+"claves para quien tenga el sistema en modo oscuro (un color de marca "
+"oscuro se aclara automáticamente en una página oscura, para que no "
+"desaparezca). El texto sobre una barra de color es blanco o casi negro, "
+"según lo que se lea mejor sobre ese color."
+
+#: ../../source/admin/ai_agent.md:151 35aeeaf8f650431eb2c2c93706dbda27
+msgid ""
+"**`footer`** is printed under every chart, and inside the downloaded SVG "
+"and PNG."
+msgstr ""
+"**`footer`** se imprime bajo cada gráfico, y también dentro del SVG y del"
+" PNG descargados."
+
+#: ../../source/admin/ai_agent.md:153 c51dfd00da0b4c36860f73609cdce0c6
+msgid ""
+"The file is untrusted text that ends up inside pictures, so every value "
+"is checked: colours must be `#rgb` or `#rrggbb`, the font a plain list of"
+" names. A value that is missing or wrong is replaced by the built-in "
+"default for that value, and logged once, so a typo can never stop a chart"
+" from being drawn."
+msgstr ""
+"El archivo es texto no fiable que acaba dentro de imágenes, por lo que se"
+" comprueba cada valor: los colores deben ser `#rgb` o `#rrggbb`, la "
+"tipografía una simple lista de nombres. Un valor ausente o erróneo se "
+"sustituye por el valor predeterminado integrado y se anota una sola vez "
+"en el registro, de modo que un error tipográfico nunca impide dibujar un "
+"gráfico."
+
+#: ../../source/admin/ai_agent.md:157 040178307d8643ac9c4ae35f276dca2e
+msgid "What the tools cost"
+msgstr "Qué cuestan las herramientas"
+
+#: ../../source/admin/ai_agent.md:159 b24a760637c945fa91afc1c1a173a077
+msgid ""
+"The agent is billed by the amount of text it reads, so each tool has a "
+"cost, and there are two kinds. The figures below are measured on this "
+"build by `ruby utilities/mcp_cost_report.rb` (add `--markdown` for tables"
+" like these); tokens are estimated as characters divided by four, which "
+"is rough, so read them as **relative sizes**."
+msgstr ""
+"El agente se factura por la cantidad de texto que lee, de modo que cada "
+"herramienta tiene un coste, de dos tipos. Las cifras siguientes se "
+"midieron en esta versión con `ruby utilities/mcp_cost_report.rb` (con "
+"`--markdown` se obtienen tablas como estas); los tokens se estiman como "
+"caracteres divididos entre cuatro, que es aproximado, así que conviene "
+"leerlas como **tamaños relativos**."
+
+#: ../../source/admin/ai_agent.md:163 398cc820e23849a48ab845d3771c2b77
+msgid ""
+"**Fixed cost.** The definition of every tool (name, description, "
+"parameters) is sent to the model with *every* request it makes, and "
+"answering one question takes several requests. Adding a tool therefore "
+"makes every question dearer, whether or not that tool is used. This is "
+"why the descriptions are kept short and why a new tool has to earn its "
+"place."
+msgstr ""
+"**Coste fijo.** La definición de cada herramienta (nombre, descripción, "
+"parámetros) se envía al modelo con *cada* petición que hace, y responder "
+"a una pregunta requiere varias peticiones. Añadir una herramienta "
+"encarece, por tanto, todas las preguntas, se use o no esa herramienta. "
+"Por eso las descripciones se mantienen cortas y una herramienta nueva ha "
+"de justificar su lugar."
+
+#: ../../source/admin/ai_agent.md ebb014f9f55e484fb7f52ca0b828ec45
+msgid "Tokens (approx.)"
+msgstr "Tokens (aprox.)"
+
+#: ../../source/admin/ai_agent.md da7bd06523da49408b41cd7bbe8097b7
+msgid "aggregate"
+msgstr "aggregate"
+
+#: ../../source/admin/ai_agent.md c2d899785fcd43b0a0e1efffe5055969
+msgid "~1350"
+msgstr "~1350"
+
+#: ../../source/admin/ai_agent.md 9d2b4bf641274ef4a2de20ff13328548
+msgid "search_records"
+msgstr "search_records"
+
+#: ../../source/admin/ai_agent.md 1527274501994acbb91f4807a975e10f
+msgid "~1330"
+msgstr "~1330"
+
+#: ../../source/admin/ai_agent.md 1a753c2e3d6c41cfa2eece11f99f685a
+msgid "chart_over_time"
+msgstr "chart_over_time"
+
+#: ../../source/admin/ai_agent.md c73c3cc4a00f4f4dba790369e85e6848
+msgid "~1190"
+msgstr "~1190"
+
+#: ../../source/admin/ai_agent.md 5c2d5ab99c404bf1b6f5d05846ca7a55
+msgid "chart_breakdown"
+msgstr "chart_breakdown"
+
+#: ../../source/admin/ai_agent.md c6fad78863a840fe864c1b03252db542
+msgid "~1040"
+msgstr "~1040"
+
+#: ../../source/admin/ai_agent.md 995d8cd0816d45909f648cd2ae1f3021
+msgid "render_timeline"
+msgstr "render_timeline"
+
+#: ../../source/admin/ai_agent.md f109a84978ec4650aa432981b4e878a2
+msgid "~700"
+msgstr "~700"
+
+#: ../../source/admin/ai_agent.md 324a83bc93c54f42979bf39ff3657499
+msgid "describe_form"
+msgstr "describe_form"
+
+#: ../../source/admin/ai_agent.md cb5b1c32a37b4b759b7fe2fb1a08b649
+msgid "~450"
+msgstr "~450"
+
+#: ../../source/admin/ai_agent.md 32ecfdc91f6d4b5bbd5650a6e5863227
+msgid "linked_records"
+msgstr "linked_records"
+
+#: ../../source/admin/ai_agent.md 414312269e5b42169a68ee3b7835fb35
+msgid "~420"
+msgstr "~420"
+
+#: ../../source/admin/ai_agent.md 3ad0ab31ec934512be2305e8871a3a3c
+msgid "record_history"
+msgstr "record_history"
+
+#: ../../source/admin/ai_agent.md ea46b02eb0db4ab0b6d0c9b923661ee8
+msgid "~340"
+msgstr "~340"
+
+#: ../../source/admin/ai_agent.md 5f7ef6af91284d3aa95f24b311843748
+msgid "get_record"
+msgstr "get_record"
+
+#: ../../source/admin/ai_agent.md 6e4f28f36fed41a786f19f12577f0ec3
+msgid "~270"
+msgstr "~270"
+
+#: ../../source/admin/ai_agent.md d0725fa731ab4f6baf7e6ae609d6f36a
+msgid "all tools together"
+msgstr "todas las herramientas juntas"
+
+#: ../../source/admin/ai_agent.md 94bd285eef8742e1bd55bfc544c5f596
+msgid "~7100"
+msgstr "~7100"
+
+#: ../../source/admin/ai_agent.md:180 228a19a8afe24dee928c655ceb244b6e
+msgid ""
+"**Cost per call.** A call returns a short text for the model (a few "
+"hundred tokens at most). A chart or timeline also returns a *page*. "
+"Whether the agent program passes that page on to the model, or only shows"
+" it to the person, depends on the program; the middle column is what it "
+"would cost if it did. The page is about four times the size of one "
+"picture, because it carries the picture and downloadable copies of both "
+"shapes."
+msgstr ""
+"**Coste por llamada.** Una llamada devuelve un texto breve para el modelo"
+" (unos pocos cientos de tokens como mucho). Un gráfico o una cronología "
+"devuelve además una *página*. Que el programa del agente pase esa página "
+"al modelo, o solo se la muestre a la persona, depende del programa; la "
+"columna central es lo que costaría si lo hiciera. La página tiene unas "
+"cuatro veces el tamaño de una imagen, porque lleva la imagen y copias "
+"descargables de los dos formatos."
+
+#: ../../source/admin/ai_agent.md 7012fa227694439bbeaa1732066239a0
+msgid "Call"
+msgstr "Llamada"
+
+#: ../../source/admin/ai_agent.md f9924b940f444d3fb4565dfef0615280
+msgid "Text the model reads"
+msgstr "Texto que lee el modelo"
+
+#: ../../source/admin/ai_agent.md d51d5f1c891144f6a716ea99c16bda45
+msgid "Page (if the client passes it on)"
+msgstr "Página (si el cliente la pasa al modelo)"
+
+#: ../../source/admin/ai_agent.md 69d8279bc07c4488829b4fbfd1be7907
+msgid "One SVG file"
+msgstr "Un archivo SVG"
+
+#: ../../source/admin/ai_agent.md 457f68b7f75b48868acbd551a6e9b32c
+msgid "chart_over_time, bars, 12 years, 1 series"
+msgstr "chart_over_time, barras, 12 años, 1 serie"
+
+#: ../../source/admin/ai_agent.md 0040feea73eb40f1afccb8b27dbf0a70
+msgid "~120"
+msgstr "~120"
+
+#: ../../source/admin/ai_agent.md c768843e0ea54621b157f7484e600d33
+msgid "~4770"
+msgstr "~4770"
+
+#: ../../source/admin/ai_agent.md 3fe3ffd77d9c423e8f40d6a55c0d5723
+msgid "~1140"
+msgstr "~1140"
+
+#: ../../source/admin/ai_agent.md 5fbf528f991f451bac62b8a8e9cc5c54
+msgid "chart_over_time, lines, 12 years, 2 series"
+msgstr "chart_over_time, líneas, 12 años, 2 series"
+
+#: ../../source/admin/ai_agent.md 71a8e569d39149db830eea28318e67ec
+#: b3cb73af98294d718fedc3a9991c8022 b92c62466bbe4bddaee14e147c13c6e4
+msgid "~140"
+msgstr "~140"
+
+#: ../../source/admin/ai_agent.md 7d7d32ee21a0459aa439dc378cff4926
+msgid "~5540"
+msgstr "~5540"
+
+#: ../../source/admin/ai_agent.md 62669566a5ff4e77bfc69f4b4e885712
+msgid "~1340"
+msgstr "~1340"
+
+#: ../../source/admin/ai_agent.md a6a5dae522a443c8ad59c1f8fbbe9fff
+msgid "chart_over_time, stacked, 12 years, 2 series"
+msgstr "chart_over_time, apiladas, 12 años, 2 series"
+
+#: ../../source/admin/ai_agent.md dc4cf098d1d94d5ca1a6481f8726f976
+msgid "~7750"
+msgstr "~7750"
+
+#: ../../source/admin/ai_agent.md 9d741aaed33f488bbf500d5d895f34b7
+msgid "~1950"
+msgstr "~1950"
+
+#: ../../source/admin/ai_agent.md fd3b6e4e6ba64a459f89669e3dc83425
+msgid "chart_over_time, stacked, 12 years, 8 series"
+msgstr "chart_over_time, apiladas, 12 años, 8 series"
+
+#: ../../source/admin/ai_agent.md 62ce29fa5deb45229a27aa967562f78e
+msgid "~280"
+msgstr "~280"
+
+#: ../../source/admin/ai_agent.md 9ae6f9e0c23c4847876f4f5c6e2a3c0e
+msgid "~20130"
+msgstr "~20130"
+
+#: ../../source/admin/ai_agent.md 100cb84f569f42fa9f933b669b32b02b
+msgid "~5270"
+msgstr "~5270"
+
+#: ../../source/admin/ai_agent.md 475234067b524fb394dbb0ffc8b8f635
+msgid "chart_over_time, stacked, 30 years, 4 series"
+msgstr "chart_over_time, apiladas, 30 años, 4 series"
+
+#: ../../source/admin/ai_agent.md 5960dd6627e24989b34f9466c93a4055
+msgid "~310"
+msgstr "~310"
+
+#: ../../source/admin/ai_agent.md 2b6bb571968345668efcccdffc479ce9
+msgid "~17290"
+msgstr "~17290"
+
+#: ../../source/admin/ai_agent.md 900ae768200449b6b8f2e4b40c95d7de
+msgid "~4490"
+msgstr "~4490"
+
+#: ../../source/admin/ai_agent.md 542a8237aae946ca903a8fcada5f53bd
+msgid "chart_breakdown, bars, 12 categories"
+msgstr "chart_breakdown, barras, 12 categorías"
+
+#: ../../source/admin/ai_agent.md fa98091f7294413192d3e8ef787999c0
+msgid "~5300"
+msgstr "~5300"
+
+#: ../../source/admin/ai_agent.md 5692381344ea486da43c193da5e28b79
+msgid "~1280"
+msgstr "~1280"
+
+#: ../../source/admin/ai_agent.md 50ff96cedea9447eb4f68b88c194d503
+msgid "chart_breakdown, shares, 12 categories x 2 series"
+msgstr "chart_breakdown, proporciones, 12 categorías x 2 series"
+
+#: ../../source/admin/ai_agent.md c180f8a81c044aa7a7cbb2e23d8a5775
+msgid "~160"
+msgstr "~160"
+
+#: ../../source/admin/ai_agent.md 38daf6d98bf647b5b3d960bb8f23b85b
+msgid "~7690"
+msgstr "~7690"
+
+#: ../../source/admin/ai_agent.md dcbf353092884312b7c3532359eedb5b
+msgid "~1920"
+msgstr "~1920"
+
+#: ../../source/admin/ai_agent.md 995d8cd0816d45909f648cd2ae1f3021
+msgid "render_timeline, 7 rows"
+msgstr "render_timeline, 7 filas"
+
+#: ../../source/admin/ai_agent.md 8e2d08d192874e80842c076d6f9a26c9
+msgid "~80"
+msgstr "~80"
+
+#: ../../source/admin/ai_agent.md cc0b9966a1794262ad394be94bced684
+msgid "~2590"
+msgstr "~2590"
+
+#: ../../source/admin/ai_agent.md 6cd56eb05e8d4128bc72f8b31beb8922
+msgid "-"
+msgstr "-"
+
+#: ../../source/admin/ai_agent.md:196 8ea59d98034e445faf01c73399749854
+msgid ""
+"What drives the cost, in order: the **number of categories** (series) in "
+"a chart, then the number of points on the axis, then the kind of chart "
+"(bars are the cheapest, lines a little more, stacked charts the most). A "
+"PNG attachment is an image and costs as one. To keep costs down: ask for "
+"fewer categories (`top_n` merges the smallest into \"Other\"), leave "
+"charts as pages rather than attachments unless an image is needed, and do"
+" not add a tool for something an existing one can already do."
+msgstr ""
+"Lo que más influye en el coste, por orden: el **número de categorías** "
+"(series) de un gráfico, luego el número de puntos del eje y luego el tipo"
+" de gráfico (las barras son lo más barato, las líneas algo más y los "
+"gráficos apilados lo más caro). Un archivo adjunto PNG es una imagen y "
+"cuesta como tal. Para contener el coste: pedir menos categorías (`top_n` "
+"reúne las más pequeñas en «Otros»), dejar los gráficos como páginas y no "
+"como archivos adjuntos salvo que haga falta una imagen, y no añadir una "
+"herramienta para algo que una existente ya puede hacer."
+
+#: ../../source/admin/ai_agent.md:201 09f0a9b72cbf4cb8bb0341ed8700fb5c
 msgid "Languages"
 msgstr "Idiomas"
 
-#: ../../source/admin/ai_agent.md:118 ac70252c1f2343e6b7b886ead6e578e1
+#: ../../source/admin/ai_agent.md:203 ac70252c1f2343e6b7b886ead6e578e1
 msgid ""
 "Questions can be asked in English or Spanish. A value can be named in "
 "either: a category called \"Catedrático\" and one called \"Full "
@@ -317,11 +777,11 @@ msgstr ""
 "otra llamada «Full professor» son el mismo valor para el agente. Las "
 "fechas pueden escribirse como `today` o `hoy`."
 
-#: ../../source/admin/ai_agent.md:122 7e6c20cfa9fd4f96917fc96d81b6bdd7
+#: ../../source/admin/ai_agent.md:207 7e6c20cfa9fd4f96917fc96d81b6bdd7
 msgid "Good to know"
 msgstr "Conviene saber"
 
-#: ../../source/admin/ai_agent.md:124 b14a1806e26144b08254a48b1e52232e
+#: ../../source/admin/ai_agent.md:209 b14a1806e26144b08254a48b1e52232e
 msgid ""
 "The agent is a language model: it can misread a question. Counts and "
 "lists come from the database, but which records it decides to count is "
@@ -333,7 +793,7 @@ msgstr ""
 "registros decide contar es criterio suyo, y por eso las descripciones "
 "anteriores fijan definiciones como «personal actual»."
 
-#: ../../source/admin/ai_agent.md:127 bebb9898b0c149c0969f6d9992e6806a
+#: ../../source/admin/ai_agent.md:212 bebb9898b0c149c0969f6d9992e6806a
 msgid ""
 "The application does not store what an agent asks. Its log records only "
 "which tool ran and how long it took (and, if something breaks inside the "
@@ -348,7 +808,7 @@ msgstr ""
 "conservar su propio historial de conversación; eso queda fuera de esta "
 "aplicación."
 
-#: ../../source/admin/ai_agent.md:132 e0053d333f6d43d1b321c96ab8aa9ac6
+#: ../../source/admin/ai_agent.md:217 e0053d333f6d43d1b321c96ab8aa9ac6
 msgid ""
 "The same records are reachable through the search pages, so the agent "
 "shows nothing that a logged-in administrator cannot already see."
@@ -356,4 +816,7 @@ msgstr ""
 "Los mismos registros son accesibles mediante las páginas de búsqueda, de "
 "modo que el agente no muestra nada que un administrador con sesión "
 "iniciada no pueda ver ya."
+
+#~ msgid "Timelines and saving the picture"
+#~ msgstr "Cronologías y cómo guardar la imagen"
 

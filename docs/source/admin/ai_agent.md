@@ -52,6 +52,9 @@ saying MCP is disabled means `MCP_TOKEN` is not set in the running container.
 | `get_record` | One record in full, with cross-references shown as names |
 | `linked_records` | Follow relationships: a person's projects, commitments and publications; a project's people |
 | `record_history` | How one record changed over time, field by field |
+| `aggregate` | Count or add up records by category and by calendar year (headcount at year end, funding per year, papers per year) |
+| `chart_over_time` | Draw how a number changes over the years, split by category |
+| `chart_breakdown` | Draw what a number is made up of, by category |
 | `render_timeline` | Draw a timeline of dated facts the agent gathered |
 
 The agent is told to use these before searching the web for anything about the
@@ -95,23 +98,105 @@ staff"), state it here: the agent will not guess it.
 description in a language, so a form added later cannot go without one. A change
 shows up for the agent after `/cbgp/refresh`, with no restart.
 
-## Timelines and saving the picture
+## Charts
 
-When asked to show something over time, the agent draws a timeline: bars for
-things with a start and an end, a diamond for a single date, a bar that runs on to
-today for something still going, and a dashed line marking today. Rows are grouped
-into labelled bands, and hovering over a row shows its dates.
+Two tools draw charts, and the agent picks one by the question being asked:
 
-The picture can be saved from the timeline itself with **Download SVG** (a vector
-file that opens in any drawing program or slide deck) and **Download PNG** (an
-ordinary image). The PNG link appears only where the page is allowed to run its own
-small script: in a saved copy of the page, or one opened on its own, but not inside
-a chat window that blocks scripts. If you want the agent to hand over a PNG as an
-attachment instead, ask it for "an image", and it will request one.
+- **`chart_over_time`** answers "how has X changed over the years, by category?": headcount at the end of each year,
+  funding per year by source, papers per year. Bars, stacked bars, 100% bars (shares), lines or areas.
+- **`chart_breakdown`** answers "what is X made up of?": gender balance by category, funding mix, members by nationality.
 
-Making a PNG on the server needs the `rsvg-convert` program and a font. The
-supplied Docker image includes both (`librsvg2-bin` and `fonts-dejavu-core`); on a
-server without them an attachment request quietly falls back to the timeline page.
+You do not give the tool numbers. You give it the *question* (which records, what to count or add up, how to split
+them, how the years are laid out) and the server computes the numbers and draws the chart, so no figure is ever
+retyped by a language model and the same question always gives the same chart. Each chart carries a **caption**
+saying what was asked, as of what date, how many records were read and how many were left out for lacking a needed
+field (for example members without a start date). A chart pasted into a report can be rebuilt next year from its caption.
+
+Every chart is drawn in two shapes from the same data, sized so the finished image has exactly that proportion, title and
+caption included: a wide **slide** (16:9) and a **report** column (3:2) for a Word document. The page shows one; under it
+are links to download **both** as SVG (a vector file that opens in any drawing or slide program) and as PNG, and the
+**numbers** behind the chart as a tab-separated file that opens in Excel. The PNG link appears only where the page is
+allowed to run its own small script: in a saved copy of the page, or one opened on its own, but not inside a chat window
+that blocks scripts. If you want the agent to hand over a PNG as an attachment instead, ask it for "an image".
+
+The same applies to **timelines**: bars for things with a start and an end, a diamond for a single date, a bar that runs on
+to today for something still going, a dashed line marking today, rows grouped into labelled bands.
+
+Making a PNG on the server needs the `rsvg-convert` program and a font. The supplied Docker image includes both
+(`librsvg2-bin` and `fonts-dejavu-core`); on a server without them an attachment request quietly falls back to the page.
+
+## Branding the charts
+
+Colours, font and a footer line come from a small file, not from the code and not from the ontology. Copy
+`theme/theme.example.yml` to `theme/theme.yml`, edit it, and the next chart drawn uses it, with no restart. In Docker the
+compose file mounts the folder (`./theme:/server/theme:ro`); another location can be named with `CBGP_THEME_FILE`.
+
+```yaml
+name: CBGP
+font: Calibri, Carlito, "DejaVu Sans", Arial, sans-serif
+colors: { background: "#ffffff", text: "#262626", muted: "#666666", band: "#f2f5f2", grid: "#dfe5df", highlight: "#c0392b" }
+series: ["#007336", "#c58b00", "#2a78b5", "#68af27", "#4c4c4c", "#b5532a", "#8a5ab5", "#2a9fa6"]
+categories: { European: "#2a78b5" }
+footer: "Source: CBGP administrative database"
+```
+
+- **`series`** are the colours of the categories of a chart, in order (up to 24). The default starts with CBGP green
+  (`#007336`, `#68af27` and the charcoal `#4c4c4c` were sampled from the CBGP logo), then colours chosen to stay apart from
+  the greens and from each other, also for colour-blind readers: eight categories cannot all be green.
+- **`categories`** fixes the colour of a named category, wherever it appears, so "European" is the same colour in every
+  chart. The name ignores case and accents.
+- **`colors`** are the page colours; `dark` takes the same keys for a viewer whose system is in dark mode (a dark brand
+  colour is lightened automatically on a dark page, so it does not vanish). Text on a coloured bar is white or near-black,
+  whichever reads better on that colour.
+- **`footer`** is printed under every chart, and inside the downloaded SVG and PNG.
+
+The file is untrusted text that ends up inside pictures, so every value is checked: colours must be `#rgb` or `#rrggbb`,
+the font a plain list of names. A value that is missing or wrong is replaced by the built-in default for that value, and
+logged once, so a typo can never stop a chart from being drawn.
+
+## What the tools cost
+
+The agent is billed by the amount of text it reads, so each tool has a cost, and there are two kinds. The figures below are
+measured on this build by `ruby utilities/mcp_cost_report.rb` (add `--markdown` for tables like these); tokens are estimated
+as characters divided by four, which is rough, so read them as **relative sizes**.
+
+**Fixed cost.** The definition of every tool (name, description, parameters) is sent to the model with *every* request it
+makes, and answering one question takes several requests. Adding a tool therefore makes every question dearer, whether or
+not that tool is used. This is why the descriptions are kept short and why a new tool has to earn its place.
+
+| Tool | Tokens (approx.) |
+|---|---|
+| aggregate | ~1350 |
+| search_records | ~1330 |
+| chart_over_time | ~1190 |
+| chart_breakdown | ~1040 |
+| render_timeline | ~700 |
+| describe_form | ~450 |
+| linked_records | ~420 |
+| record_history | ~340 |
+| get_record | ~270 |
+| all tools together | ~7100 |
+
+**Cost per call.** A call returns a short text for the model (a few hundred tokens at most). A chart or timeline also
+returns a *page*. Whether the agent program passes that page on to the model, or only shows it to the person, depends on the
+program; the middle column is what it would cost if it did. The page is about four times the size of one picture, because it
+carries the picture and downloadable copies of both shapes.
+
+| Call | Text the model reads | Page (if the client passes it on) | One SVG file |
+|---|---|---|---|
+| chart_over_time, bars, 12 years, 1 series | ~120 | ~4770 | ~1140 |
+| chart_over_time, lines, 12 years, 2 series | ~140 | ~5540 | ~1340 |
+| chart_over_time, stacked, 12 years, 2 series | ~140 | ~7750 | ~1950 |
+| chart_over_time, stacked, 12 years, 8 series | ~280 | ~20130 | ~5270 |
+| chart_over_time, stacked, 30 years, 4 series | ~310 | ~17290 | ~4490 |
+| chart_breakdown, bars, 12 categories | ~140 | ~5300 | ~1280 |
+| chart_breakdown, shares, 12 categories x 2 series | ~160 | ~7690 | ~1920 |
+| render_timeline, 7 rows | ~80 | ~2590 | - |
+
+What drives the cost, in order: the **number of categories** (series) in a chart, then the number of points on the axis, then the
+kind of chart (bars are the cheapest, lines a little more, stacked charts the most). A PNG attachment is an image and costs
+as one. To keep costs down: ask for fewer categories (`top_n` merges the smallest into "Other"), leave charts as pages rather
+than attachments unless an image is needed, and do not add a tool for something an existing one can already do.
 
 ## Languages
 
