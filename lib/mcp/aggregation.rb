@@ -257,7 +257,8 @@ module Mcp
       end
       rows.sort_by! { |r| [r[:period].to_s, Array(r[:group]).join('|')] }
       truncated = rows.size > MAX_ROWS
-      out = { form: form.name, measure: describe_measure(spec), by: spec.group_fields, rows: rows.first(MAX_ROWS),
+      out = { form: form.name, measure: describe_measure(spec), by: spec.group_fields, by_labels: spec.group_fields.map { |g| field_label(ctx, form, g) },
+              rows: rows.first(MAX_ROWS),
               records_considered: result[:considered], as_of: today.iso8601 }
       out[:over_time] = describe_over_time(spec, today) if spec.mode
       out[:excluded] = result[:excluded] unless result[:excluded].empty?
@@ -276,8 +277,8 @@ module Mcp
     end
 
     def describe_over_time(spec, today)
-      { mode: spec.mode, granularity: 'year', fields: [spec.date_field, spec.start_field, spec.end_field].compact,
-        current_year_is_partial_as_of: today.iso8601 }
+      fields = [spec.date_field, spec.start_field, spec.end_field].compact
+      { mode: spec.mode, granularity: 'year', fields: fields, current_year_is_partial_as_of: today.iso8601 }
     end
 
     def notes_for(spec, result, today, truncated)
@@ -296,6 +297,13 @@ module Mcp
         keys = cells.keys.map { |c| c[i + 1] }.uniq
         [i, keys.to_h { |k| [k, label_for(ctx, form, name, k)] }]
       end
+    end
+
+    # What a person sees as the field's name in the forms (or "record type" for the kind of record).
+    def field_label(ctx, form, name)
+      return 'record type' if name == RECORD_FORM
+
+      ctx.fields(form.name).find { |f| f[:questionclass] == name }&.dig(:label) || name
     end
 
     def label_for(ctx, form, name, key)

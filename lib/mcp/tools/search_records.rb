@@ -24,6 +24,25 @@ module Mcp
       }
     }.freeze
 
+    # The same conditions, without the long descriptions, for the tools that only reuse them (search_records
+    # carries the full explanation): keeps the cost of listing every tool down.
+    WHERE_SCHEMA_BRIEF = {
+      type: 'array',
+      description: 'Conditions that must ALL hold, as in search_records: [{field, op, value | start/end, or_empty}]. Omit to use every record.',
+      items: {
+        type: 'object',
+        properties: {
+          field: { type: 'string', description: 'Field name' },
+          op: { type: 'string', enum: Records::OPS.keys, description: 'Default contains' },
+          value: { type: 'string', description: 'Text or date to match' },
+          start: { type: 'string', description: 'between only' },
+          end: { type: 'string', description: 'between only' },
+          or_empty: { type: 'boolean', description: 'Also accept records with no value' }
+        },
+        required: ['field']
+      }
+    }.freeze
+
     class SearchRecords < Mcp::Tool
       DEFAULT_LIMIT = 25
       MAX_LIMIT = 200

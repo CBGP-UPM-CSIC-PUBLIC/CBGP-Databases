@@ -138,8 +138,8 @@ module Mcp
       # the label sits under the chart and flips to the left near the right edge.
       def today_marker(pos, plot_bottom, word)
         anchor = pos > WIDTH - 60 ? 'end' : 'middle'
-        %(<line class="today" x1="#{pos}" x2="#{pos}" y1="#{AXIS_H - 4}" y2="#{plot_bottom - 6}"/>) +
-          %(<text class="todaylbl" x="#{pos}" y="#{plot_bottom + 6}" text-anchor="#{anchor}">#{esc(word)}</text>)
+        %(<line class="today" x1="#{n(pos)}" x2="#{n(pos)}" y1="#{AXIS_H - 4}" y2="#{plot_bottom - 6}"/>) +
+          %(<text class="todaylbl" x="#{n(pos)}" y="#{plot_bottom + 6}" text-anchor="#{anchor}">#{esc(word)}</text>)
       end
 
       def row_svg(row, x, top, lane_index, words)
@@ -148,21 +148,21 @@ module Mcp
         tip = esc([row.label, "#{row.start.iso8601}#{row.point ? '' : " → #{row.ongoing ? words[:ongoing] : row.end_date.iso8601}"}", row.detail].reject(&:empty?).join("\n"))
         x1 = x.(row.start)
         if row.point
-          shape = %(<polygon points="#{x1},#{mid - 6} #{x1 + 6},#{mid} #{x1},#{mid + 6} #{x1 - 6},#{mid}" style="fill:#{color}"/>)
+          shape = %(<polygon points="#{n(x1)},#{n(mid - 6)} #{n(x1 + 6)},#{n(mid)} #{n(x1)},#{n(mid + 6)} #{n(x1 - 6)},#{n(mid)}" style="fill:#{color}"/>)
           right_x = x1 + 10
           left_x = x1 - 10
           bar_w = 0
         else
           x2 = [x.(row.end_date), x1 + 3].max
-          shape = %(<rect x="#{x1}" y="#{mid - 6}" width="#{x2 - x1}" height="12" rx="3" style="fill:#{color}" opacity=".85"/>)
-          shape += %(<path d="M#{x2} #{mid - 6} l8 6 l-8 6z" style="fill:#{color}"/>) if row.ongoing
+          shape = %(<rect x="#{n(x1)}" y="#{n(mid - 6)}" width="#{n(x2 - x1)}" height="12" rx="3" style="fill:#{color}" opacity=".85"/>)
+          shape += %(<path d="M#{n(x2)} #{n(mid - 6)} l8 6 l-8 6z" style="fill:#{color}"/>) if row.ongoing
           right_x = x2 + (row.ongoing ? 12 : 6)
           left_x = x1 - 6
           bar_w = x2 - x1
         end
         label_x, anchor, css_class, text = place_label(row.label, right_x, left_x, x1, bar_w)
         ink = css_class.include?('inbar') ? %( style="fill:#{Frame.ink(lane_index)}") : ''
-        %(<g><title>#{tip}</title>#{shape}<text class="#{css_class}" x="#{label_x}" y="#{mid + 4}" text-anchor="#{anchor}"#{ink}>#{esc(text)}</text></g>)
+        %(<g><title>#{tip}</title>#{shape}<text class="#{css_class}" x="#{n(label_x)}" y="#{n(mid + 4)}" text-anchor="#{anchor}"#{ink}>#{esc(text)}</text></g>)
       end
 
       # Where a row's label goes, so it is always readable and never runs into
@@ -203,7 +203,7 @@ module Mcp
       end
 
       def tick(pos, text, total_h)
-        %(<line class="grid" x1="#{pos}" x2="#{pos}" y1="#{AXIS_H - 8}" y2="#{total_h - 6}"/><text class="tick" x="#{pos}" y="#{AXIS_H - 14}" text-anchor="middle">#{esc(text)}</text>)
+        %(<line class="grid" x1="#{n(pos)}" x2="#{n(pos)}" y1="#{AXIS_H - 8}" y2="#{total_h - 6}"/><text class="tick" x="#{n(pos)}" y="#{AXIS_H - 14}" text-anchor="middle">#{esc(text)}</text>)
       end
 
       def clip(text, max)
@@ -212,6 +212,10 @@ module Mcp
 
       def esc(text)
         Frame.esc(text)
+      end
+
+      def n(value)
+        Frame.n(value)
       end
     end
   end

@@ -240,7 +240,7 @@ RSpec.describe Mcp::Widgets::Frame do
     lines = described_class.wrap('alpha beta gamma delta', 11)
     expect(lines).to eq(['alpha beta', 'gamma delta'])
     expect(described_class.wrap('x' * 30, 10)).to eq(['x' * 30])
-    expect(described_class.wrap('')).to eq([])
+    expect(described_class.wrap('', 10)).to eq([])
   end
 
   it 'names a download after the title, with a plain-letters fallback' do

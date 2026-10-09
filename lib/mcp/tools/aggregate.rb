@@ -38,7 +38,7 @@ module Mcp
         field (e.g. no start date): report that to the user, it is a data-quality fact. Check "notes" and "as_of".
       TEXT
       param :form, type: 'string', required: true, description: 'Form name from describe_form (a storage name such as project covers all its forms)'
-      param :where, **WHERE_SCHEMA
+      param :where, **WHERE_SCHEMA_BRIEF
       param :measure, type: 'string', enum: Aggregation::MEASURES, description: 'count (default), sum or avg'
       param :field, type: 'array', items: { type: 'string' },
                     description: 'For sum/avg: number or currency field names; the first one a record has a value for is used'

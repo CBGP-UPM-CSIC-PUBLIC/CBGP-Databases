@@ -18,11 +18,11 @@ module Mcp
     module Frame
       TITLE_H = 30
       NOTE_H = 15
-      NOTE_WRAP = 150
+      NOTE_CHAR_W = 5.7 # average width of a note character at 10.5px
 
       WORDS = {
-        'en' => { download: 'Download SVG', download_png: 'Download PNG', title: 'Chart', file: 'chart' },
-        'es' => { download: 'Descargar SVG', download_png: 'Descargar PNG', title: 'Gráfico', file: 'grafico' }
+        'en' => { download: 'Download SVG', download_png: 'Download PNG', download_data: 'Download the numbers', title: 'Chart', file: 'chart' },
+        'es' => { download: 'Descargar SVG', download_png: 'Descargar PNG', download_data: 'Descargar los datos', title: 'Gráfico', file: 'grafico' }
       }.freeze
 
       # The page can make its own PNG, in the viewer's browser: the SVG (carried in the "Download SVG" link)
@@ -31,10 +31,9 @@ module Mcp
       # link still works; in a saved or separately opened page it appears.
       PNG_SCRIPT = <<~JS.freeze
         (function(){
-          var svgLink=document.getElementById('dlsvg'), pngLink=document.getElementById('dlpng');
-          if(!svgLink||!pngLink||!document.createElement('canvas').getContext) return;
-          window.cbgpChartPng=function(done){
-            var img=new Image();
+          if(!document.createElement('canvas').getContext) return;
+          window.cbgpChartPng=function(done,svgId){
+            var svgLink=document.getElementById(svgId||'dlsvg'), img=new Image();
             img.onload=function(){
               var w=(img.naturalWidth||960)*2, h=(img.naturalHeight||300)*2, c=document.createElement('canvas');
               c.width=w; c.height=h;
@@ -43,13 +42,17 @@ module Mcp
             };
             img.src=svgLink.href;
           };
-          pngLink.hidden=false;
-          pngLink.addEventListener('click',function(ev){
-            ev.preventDefault();
-            window.cbgpChartPng(function(blob){
-              var url=URL.createObjectURL(blob), a=document.createElement('a');
-              a.href=url; a.download=pngLink.getAttribute('data-name'); document.body.appendChild(a); a.click(); a.remove();
-              setTimeout(function(){URL.revokeObjectURL(url);},2000);
+          Array.prototype.forEach.call(document.querySelectorAll('a[id^=dlpng]'),function(pngLink){
+            var svgId=pngLink.id.replace('dlpng','dlsvg'), svgLink=document.getElementById(svgId);
+            if(!svgLink) return;
+            pngLink.hidden=false;
+            pngLink.addEventListener('click',function(ev){
+              ev.preventDefault();
+              window.cbgpChartPng(function(blob){
+                var url=URL.createObjectURL(blob), a=document.createElement('a');
+                a.href=url; a.download=pngLink.getAttribute('data-name'); document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(function(){URL.revokeObjectURL(url);},2000);
+              },svgId);
             });
           });
         })();
@@ -59,6 +62,12 @@ module Mcp
 
       def esc(text)
         CGI.escapeHTML(text.to_s)
+      end
+
+      # A coordinate for an SVG attribute: one decimal at most, no trailing ".0" (a very long decimal such as
+      # 401.56164383561645 costs bytes in every shape of every picture and shows nothing).
+      def n(value)
+        format('%.1f', value.to_f).sub(/\.0\z/, '')
       end
 
       # A reference to the n-th colour of the picture, for use in an inline style.
@@ -84,6 +93,17 @@ module Mcp
           out["c#{i}"] = shown
           out["k#{i}"] = Theme.ink(shown)
         end
+      end
+
+      # How tall the notes block of a standalone picture is (0 when there are none).
+      def notes_height(theme, notes, width)
+        lines = notes_for(theme, notes).flat_map { |n| wrap(n, note_chars(width)) }
+        lines.empty? ? 0 : (lines.size * NOTE_H) + 8
+      end
+
+      # How many characters of a note fit on one line of a picture +width+ wide.
+      def note_chars(width)
+        [((width - 16) / NOTE_CHAR_W).floor, 30].max
       end
 
       def css_vars(theme, colours)
@@ -114,17 +134,16 @@ module Mcp
         "#{slug.empty? ? words[:file] : slug}.#{extension}"
       end
 
-      def wrap(text, width = NOTE_WRAP)
+      def wrap(text, width)
         text.to_s.gsub(/\s+/, ' ').scan(/\S.{0,#{width - 1}}(?=\s|\z)|\S+/).map(&:strip)
       end
 
       # The page: heading, the picture, notes, download links, the PNG script.
-      def html_page(inner:, width:, height:, title:, words:, language:, svg:, rules:, theme:, colours:, notes: [])
+      def html_page(inner:, width:, height:, title:, words:, language:, svg:, rules:, theme:, colours:, notes: [], variants: [], data: nil)
         shown = title.to_s.empty? ? words[:title] : title
         heading = title.to_s.empty? ? '' : "<h1>#{esc(title)}</h1>"
         note_html = notes_for(theme, notes).map { |n| %(<p class="note">#{esc(n)}</p>) }.join("\n")
-        links = %(<p class="dl"><a id="dlsvg" download="#{esc(file_name(title, words, 'svg'))}" href="data:image/svg+xml;base64,#{[svg].pack('m0')}">#{esc(words[:download])}</a>) +
-                %( <a id="dlpng" data-name="#{esc(file_name(title, words, 'png'))}" href="#" hidden>#{esc(words[:download_png])}</a></p>)
+        links = download_links(title, words, svg, variants, data)
         <<~HTML
           <!doctype html>
           <html lang="#{language}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -139,11 +158,29 @@ module Mcp
         HTML
       end
 
+      # The download links under a picture: SVG and PNG for the picture shown, the same for each other shape
+      # (+variants+: [{ svg:, label: }]), and the numbers behind it (+data+: tab-separated text) for Excel.
+      def download_links(title, words, svg, variants, data)
+        pictures = [{ svg: svg, label: nil }] + Array(variants)
+        parts = pictures.each_with_index.map do |pic, i|
+          suffix = i.zero? ? '' : (i + 1).to_s
+          tag = pic[:label] ? " (#{pic[:label]})" : ''
+          extra = pic[:label] ? "-#{Theme.key(pic[:label]).gsub(/[^a-z0-9]+/, '-')}" : ''
+          name = ->(ext) { file_name(title, words, ext).sub(/\.#{ext}\z/, "#{extra}.#{ext}") }
+          %(<a id="dlsvg#{suffix}" download="#{esc(name.('svg'))}" href="data:image/svg+xml;base64,#{[pic[:svg]].pack('m0')}">#{esc(words[:download])}#{esc(tag)}</a>) +
+            %( <a id="dlpng#{suffix}" data-name="#{esc(name.('png'))}" href="#" hidden>#{esc(words[:download_png])}#{esc(tag)}</a>)
+        end
+        if data
+          parts << %(<a id="dltsv" download="#{esc(file_name(title, words, 'tsv'))}" href="data:text/tab-separated-values;charset=utf-8;base64,#{["\uFEFF#{data}"].pack('m0')}">#{esc(words[:download_data])}</a>)
+        end
+        %(<p class="dl">#{parts.join(' ')}</p>)
+      end
+
       # A standalone SVG: valid on its own (namespace, size, own styles), literal light colours, a background,
       # the title and the note lines drawn into the picture.
       def standalone(inner:, width:, height:, title:, words:, rules:, theme:, colours:, notes: [])
         top = title.to_s.empty? ? 0 : TITLE_H
-        lines = notes_for(theme, notes).flat_map { |n| wrap(n) }
+        lines = notes_for(theme, notes).flat_map { |n| wrap(n, note_chars(width)) }
         notes_h = lines.empty? ? 0 : (lines.size * NOTE_H) + 8
         total = height + top + notes_h + 4
         heading = title.to_s.empty? ? '' : %(<text class="title" x="8" y="20">#{esc(title)}</text>)
