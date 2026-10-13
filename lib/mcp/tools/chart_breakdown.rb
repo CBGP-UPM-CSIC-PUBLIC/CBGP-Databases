@@ -28,7 +28,7 @@ module Mcp
           gender balance by category of people here now: {"form":"member","group_by":["member_category","member_gender"],"where":[{"field":"member_start_date","op":"on_or_before","value":"today"},{"field":"member_end_date","op":"on_or_after","value":"today","or_empty":true}],"title":"Gender balance by category"}
           how many members of each nationality: {"form":"member","group_by":["member_nationality"],"title":"Members by nationality"}
       TEXT
-      param :form, type: 'string', required: true, description: 'Form name from describe_form'
+      param :form, type: 'string', required: true, description: 'Form name from describe_form. Several forms of one kind (e.g. the project forms) share a storage_name: pass it to cover them all in ONE call'
       param :group_by, type: 'array', items: { type: 'string' }, required: true, description: 'One or two field names, or record_form (the kind of record)'
       param :where, **WHERE_SCHEMA_BRIEF
       param :measure, **Aggregate.input_schema[:properties]['measure']

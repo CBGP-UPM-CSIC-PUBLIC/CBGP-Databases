@@ -124,7 +124,7 @@ module Mcp
           members by gender at each year end: {"form":"member","group_by":["member_gender"],"over_time":{"mode":"active_at_end","start_field":"member_start_date","end_field":"member_end_date"},"title":"Members by gender"}
           papers per year, as a line: {"form":"publication","over_time":{"mode":"by_date","date_field":"publication_date"},"style":"line","from":"2018"}
       TEXT
-      param :form, type: 'string', required: true, description: 'Form name from describe_form'
+      param :form, type: 'string', required: true, description: 'Form name from describe_form. Several forms of one kind (e.g. the project forms) share a storage_name: pass it to cover them all in ONE call'
       param :over_time, **Aggregate.input_schema[:properties]['over_time'].merge(description: 'Required. How the years are laid out (see the aggregate tool)')
       param :where, **WHERE_SCHEMA_BRIEF
       param :measure, **Aggregate.input_schema[:properties]['measure']

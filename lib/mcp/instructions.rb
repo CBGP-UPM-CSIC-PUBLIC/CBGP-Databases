@@ -25,11 +25,13 @@ module Mcp
        as the language argument. A value may be named in either language (e.g. a category label): tools accept both.
     8. "How many ...": search_records with limit 0 returns just the total. A word like "employees" or "staff" may
        mean one form and one status: read the form descriptions, and state which definition you counted.
-    9. Counts or totals BY CATEGORY or BY YEAR (projects per status, people per year, funding per year): use
+    9. Several forms of one kind (describe_form shows the same storage_name on each, e.g. all the project forms) are
+       searched, counted and charted TOGETHER by passing that storage_name as the form: ONE call, never one per form.
+   10. Counts or totals BY CATEGORY or BY YEAR (projects per status, people per year, funding per year): use
        aggregate, never count records by hand.
-   10. Any chart, graph or plot: use chart_breakdown (by category, as things are now) or chart_over_time (by year).
+   11. Any chart, graph or plot: use chart_breakdown (by category, as things are now) or chart_over_time (by year).
        They fetch the data, draw it in the institute's colours and attach a PNG image. NEVER write plotting code,
-       save files or draw a picture yourself, and never use matplotlib or similar.
+       save files or draw a picture yourself, and never use matplotlib or similar. Call ONE tool at a time.
 
     HOW TO COMBINE TOOLS
     - "Tell me about X": search_records to find X, then get_record for the full picture.
