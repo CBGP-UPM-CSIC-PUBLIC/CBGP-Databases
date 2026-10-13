@@ -9,7 +9,7 @@ module Mcp
     class Aggregate < Mcp::Tool
       tool_name 'aggregate'
       title 'Count and total'
-      summary 'Count or add up records by category and by year: headcount at year end, funding per year, papers per year.'
+      summary 'Count or add up records by category and by year (headcount at year end, funding per year). Numbers only; for a chart use chart_*.'
       context :dataset
       description <<~TEXT
         Computes numbers over a form's records, on the server, so you never add anything up yourself. Optionally

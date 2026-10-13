@@ -7,7 +7,7 @@ module Mcp
     class ChartBreakdown < Mcp::Tool
       tool_name 'chart_breakdown'
       title 'Chart a breakdown'
-      summary 'Draw what a number is made up of right now, by category: gender by category, funding mix. Ready for a report.'
+      summary 'Make a bar chart of records by category as they are now (projects by status, people by gender). Use for any such chart.'
       description <<~TEXT
         Draws a chart of how a total divides among categories (no years), in the institute's colours, ready to paste into a
         report or slides. Use it for "what is X made up of?", "how is X split by Y?", "X by Y and Z". You give the QUERY,

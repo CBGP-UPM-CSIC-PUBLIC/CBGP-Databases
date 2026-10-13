@@ -342,8 +342,8 @@ RSpec.describe Mcp::Tools::ChartOverTime do
     expect { run('output' => 'gif') }.to raise_error(Mcp::ToolError, /output must be one of: png, html, both/)
   end
 
-  it 'describes itself for a small model: a question-shaped summary and the query fields' do
-    expect(described_class.summary).to match(/how a number changes over the years/i)
+  it 'describes itself for a small model: opens with the word people type (chart) and covers the years' do
+    expect(described_class.summary).to match(/\Amake a .*chart.*over the years/i)
     expect(described_class.input_schema[:properties].keys).to include('form', 'over_time', 'group_by', 'style', 'shape', 'title', 'top_n')
   end
 end
@@ -391,8 +391,17 @@ RSpec.describe Mcp::Tools::ChartBreakdown do
     expect { described_class.run('form' => 'member', 'group_by' => ['']) }.to raise_error(Mcp::ToolError, /group_by is required.*chart_over_time/)
   end
 
-  it 'describes itself as the question "what is it made up of"' do
-    expect(described_class.summary).to match(/made up of/i)
+  it 'describes itself as a chart by category, opening with the word people type' do
+    expect(described_class.summary).to match(/\Amake a .*chart.*by category/i)
     expect(described_class.input_schema[:required]).to include('form', 'group_by')
+  end
+end
+
+RSpec.describe 'Mcp::INSTRUCTIONS and the chart tools' do
+  it 'tells the model to use the chart tools and never to draw its own' do
+    expect(Mcp::INSTRUCTIONS).to match(/chart_breakdown/)
+    expect(Mcp::INSTRUCTIONS).to match(/chart_over_time/)
+    expect(Mcp::INSTRUCTIONS).to match(/NEVER write plotting code/)
+    expect(Mcp::INSTRUCTIONS).to match(/aggregate/)
   end
 end

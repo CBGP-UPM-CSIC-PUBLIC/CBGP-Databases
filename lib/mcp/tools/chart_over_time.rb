@@ -104,7 +104,7 @@ module Mcp
     class ChartOverTime < Mcp::Tool
       tool_name 'chart_over_time'
       title 'Chart over the years'
-      summary 'Draw how a number changes over the years, split by category: headcount, funding, papers per year. Ready for a report.'
+      summary 'Make a line or bar chart of a count or total over the years (headcount, funding, papers per year). Use for any such chart.'
       description <<~TEXT
         Draws a chart of how something changed over calendar years, in the institute's colours, ready to paste into a
         report or slides. Use it for "how has X changed over the years?", "X by year and by Y". You give the QUERY, exactly
