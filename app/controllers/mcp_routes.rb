@@ -11,6 +11,9 @@ require 'rack/utils'
 module Mcp
   module Routes
     def self.registered(app)
+      # Prepare what the tools keep about the ontology in the background, so the first question is as quick as the rest.
+      Thread.new { Mcp::Records.warm_up } unless ENV['MCP_TOKEN'].to_s.strip.empty?
+
       app.post '/mcp' do
         content_type :json
         halt 503, { error: 'MCP is disabled: MCP_TOKEN is not configured on the server' }.to_json if ENV['MCP_TOKEN'].to_s.strip.empty?

@@ -57,10 +57,58 @@ module Mcp
       uri.to_s.split('#').last
     end
 
+    # Answers that depend only on the loaded ontology (a form's fields, a vocabulary, the label rules),
+    # kept for the life of the process and shared by every call: working them out costs seconds, and
+    # they cannot change until the ontology does. Keyed by the loaded ontology object, so a refresh
+    # (which loads a new one) starts clean and a stale answer can never outlive an edit. Never put
+    # anything read from the RECORDS here.
+    module Shared
+      @cache = {}
+      @lock = Mutex.new
+
+      module_function
+
+      def fetch(*key)
+        full_key = [$ontology.object_id] + key
+        @lock.synchronize do
+          @cache.clear unless @cache.keys.all? { |k| k.first == $ontology.object_id }
+          return @cache[full_key] if @cache.key?(full_key)
+        end
+        value = yield # worked out outside the lock: two calls at once may both do it, which is harmless
+        @lock.synchronize { @cache[full_key] = value }
+      end
+
+      # For specs: forget everything.
+      def reset!
+        @lock.synchronize { @cache.clear }
+      end
+    end
+
+    # Works out, once, everything Shared keeps (the fields of every listed form, their label rules and
+    # vocabularies, in each language), so the first question after a start does not pay for it. Meant for a
+    # background thread at boot; any failure only means the first call does the work itself.
+    def warm_up
+      started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      previous = Thread.current[:language]
+      SUPPORTED_LANGUAGES.each do |language|
+        Thread.current[:language] = language
+        ctx = Context.new
+        ctx.forms.each do |form|
+          ctx.label_spec(form.storage)
+          ctx.fields(form.name).each { |field| SUPPORTED_LANGUAGES.each { |lang| ctx.vocabulary(field, lang) } }
+        end
+      end
+      warn format('[MCP] warm-up done in %<ms>dms', ms: (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started) * 1000)
+    rescue StandardError => e
+      warn "[MCP] warm-up skipped: #{e.class}: #{e.message}"
+    ensure
+      Thread.current[:language] = previous
+    end
+
     # One tool call's working set: memoizes the ontology lookups so a call
     # that touches many records asks the ontology each question once. Create
-    # one per call; never keep it across calls (the ontology can be
-    # refreshed between them).
+    # one per call. What depends only on the ontology is also kept across
+    # calls (see Shared); what comes from the records never is.
     class Context
       def initialize
         @fields = {}
@@ -85,7 +133,7 @@ module Mcp
       # make a name that appears in a record (its form stamp) resolvable, so an
       # id a tool returned never dead-ends; never listed.
       def all_forms
-        @all_forms ||= begin
+        @all_forms ||= Shared.fetch(:all_forms, current_language) do
           comments = ontology_comments
           language = current_language
           rows = SPARQL.parse(<<~SPARQL).execute($ontology)
@@ -115,15 +163,17 @@ module Mcp
       # { class name => { language => text } } for every comment on the form
       # classes and on their root, read once per call.
       def ontology_comments
-        @ontology_comments ||= SPARQL.parse(<<~SPARQL).execute($ontology).each_with_object(Hash.new { |h, k| h[k] = {} }) do |row, out|
-          #{PREFIXES}
-          SELECT ?form ?comment WHERE {
-            { ?form rdfs:subClassOf cbgp:forms } UNION { BIND(cbgp:forms AS ?form) }
-            ?form rdfs:comment ?comment .
-          }
-        SPARQL
-          lang = row[:comment].respond_to?(:language) ? row[:comment].language.to_s : ''
-          out[Records.fragment(row[:form])][lang] = row[:comment].to_s.strip unless lang.empty?
+        @ontology_comments ||= Shared.fetch(:comments) do
+          SPARQL.parse(<<~SPARQL).execute($ontology).each_with_object(Hash.new { |h, k| h[k] = {} }) do |row, out|
+            #{PREFIXES}
+            SELECT ?form ?comment WHERE {
+              { ?form rdfs:subClassOf cbgp:forms } UNION { BIND(cbgp:forms AS ?form) }
+              ?form rdfs:comment ?comment .
+            }
+          SPARQL
+            lang = row[:comment].respond_to?(:language) ? row[:comment].language.to_s : ''
+            out[Records.fragment(row[:form])][lang] = row[:comment].to_s.strip unless lang.empty?
+          end
         end
       end
       private :ontology_comments
@@ -162,7 +212,7 @@ module Mcp
       # --- fields --------------------------------------------------------
 
       def fields(form_name)
-        @fields[form_name] ||= CBGP::Dataset.fields_for(form_name)
+        @fields[form_name] ||= Shared.fetch(:fields, form_name, current_language) { CBGP::Dataset.fields_for(form_name) }
       end
 
       def field!(form, name)
@@ -202,10 +252,12 @@ module Mcp
 
         block = Records.fragment(field[:answers])
         tree = field[:widget].to_s.end_with?('treeselector')
-        @vocab[[block, tree, language]] ||= in_language(language) do
-          options = tree ? tree_vocabulary(block) : flat_vocabulary(block)
-          options = tree ? flat_vocabulary(block) : tree_vocabulary(block) if options.empty?
-          options
+        @vocab[[block, tree, language]] ||= Shared.fetch(:vocabulary, block, tree, language) do
+          in_language(language) do
+            options = tree ? tree_vocabulary(block) : flat_vocabulary(block)
+            options = tree ? flat_vocabulary(block) : tree_vocabulary(block) if options.empty?
+            options
+          end
         end
       end
 
@@ -293,7 +345,7 @@ module Mcp
       def label_spec(storage)
         return @label_specs[storage] if @label_specs.key?(storage)
 
-        @label_specs[storage] = begin
+        @label_specs[storage] = Shared.fetch(:label_spec, storage, current_language) do
           declaring = forms.flat_map { |f| fields(f.name) }.find do |fld|
             fld[:references_label] && storage_dbname_for(fld[:references_target]) == storage
           end

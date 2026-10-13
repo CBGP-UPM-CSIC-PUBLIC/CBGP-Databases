@@ -46,6 +46,15 @@ No ontology change.
   words people use ("Make a bar chart of ..."). The tools together add about 7,250 tokens to
   every request; the cost report shows where they go.
 
+### Fixed
+- **The AI agent's record searches were slow** (5-11 s each, and an agent makes many). Each call
+  re-derived, from the ontology, things that only change when the ontology does (every form's
+  fields, the label rules, the vocabularies). They are now worked out once per process, kept
+  until the ontology is reloaded, and prepared in the background at start-up and after
+  `/cbgp/refresh`. A search of 25 records now takes about 0.7 s (3-6 s before); a count takes
+  milliseconds. The first question in the first seconds after a start may still wait for that
+  preparation (about 15 s in total, in the background).
+
 ### Upgrading
 **Rebuild the image** (it needs `rsvg-convert` and a font, already in the Dockerfile since
 0.19.0). To brand the charts without rebuilding, copy `theme/theme.example.yml` to

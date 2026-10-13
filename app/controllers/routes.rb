@@ -122,6 +122,7 @@ def set_routes
     Questionnaire.clear_cache!
     CBGP::Triggers.clear_cache!
     CBGP::UIText.clear_cache! # interface texts are ontology labels too
+    Thread.new { Mcp::Records.warm_up } unless ENV['MCP_TOKEN'].to_s.strip.empty? # the AI agent's own ontology cache starts empty again
     redirect '/cbgp/dashboard'
   end
   # ----------------------------------------------------------------------------

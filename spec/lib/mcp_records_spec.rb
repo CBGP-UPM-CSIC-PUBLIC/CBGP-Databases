@@ -224,3 +224,50 @@ RSpec.describe Mcp::Records::Context, 'in Spanish' do
     expect(ctx.search_params(form, [{ 'field' => 'Tipo', 'value' => 'Técnico' }]).keys).to eq(['item_kind'])
   end
 end
+
+# What depends only on the ontology is worked out once per process, not once per call (it cost seconds
+# per call before), and is dropped when the ontology is replaced.
+RSpec.describe Mcp::Records::Shared do
+  it 'works an answer out once, however many calls ask for it' do
+    runs = 0
+    2.times { expect(described_class.fetch(:thing, 'x') { runs += 1; 'answer' }).to eq('answer') }
+    expect(runs).to eq(1)
+  end
+
+  it 'keeps different keys apart' do
+    expect(described_class.fetch(:a) { 1 }).to eq(1)
+    expect(described_class.fetch(:b) { 2 }).to eq(2)
+  end
+
+  it 'forgets everything when a different ontology is loaded' do
+    described_class.fetch(:thing) { 'old' }
+    original = $ontology
+    begin
+      $ontology = Object.new
+      expect(described_class.fetch(:thing) { 'new' }).to eq('new')
+    ensure
+      $ontology = original
+    end
+  end
+
+  it 'lets a new Context reuse the fields an earlier one found' do
+    calls = 0
+    allow(CBGP::Dataset).to receive(:fields_for) { calls += 1; [] }
+    2.times { Mcp::Records::Context.new.fields('anything') }
+    expect(calls).to eq(1)
+  end
+end
+
+RSpec.describe Mcp::Records, '.warm_up' do
+  it 'never raises, so a start-up problem cannot stop the server' do
+    allow_any_instance_of(Mcp::Records::Context).to receive(:forms).and_raise(StandardError, 'no store')
+    expect { described_class.warm_up }.to output(/warm-up skipped: StandardError: no store/).to_stderr
+  end
+
+  it 'leaves the calling thread language as it found it' do
+    allow_any_instance_of(Mcp::Records::Context).to receive(:forms).and_return([])
+    Thread.current[:language] = 'es'
+    expect { described_class.warm_up }.to output(/warm-up done/).to_stderr
+    expect(Thread.current[:language]).to eq('es')
+  end
+end

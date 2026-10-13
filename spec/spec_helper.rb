@@ -103,6 +103,7 @@ RSpec.configure do |config|
 
   # Reset to English before every example so specs aren't order-dependent on
   # whatever language a previous example happened to leave set.
+  config.before { Mcp::Records::Shared.reset! } # what depends on the ontology is kept across calls; specs stub it per example
   config.before do
     Thread.current[:language] = 'en'
   end
