@@ -84,7 +84,13 @@ module Mcp
         @params ||= {}
       end
 
+      # +required: true+ makes the parameter mandatory. An Array is instead the object parameter's own list of
+      # required properties, passed on in its schema.
       def param(name, required: false, **schema)
+        if required.is_a?(Array)
+          schema[:required] = required
+          required = false
+        end
         params[name.to_s] = { schema: schema, required: required }
       end
 

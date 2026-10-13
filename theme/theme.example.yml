@@ -1,0 +1,52 @@
+# Branding for charts. Copy this file to theme/theme.yml (or point CBGP_THEME_FILE at any path),
+# edit it, and the next chart drawn uses it - no restart. In Docker, mount the folder:
+#   volumes:
+#     - ./theme:/server/theme:ro
+# Anything missing or invalid falls back to the built-in default for that value (and is logged
+# once), so a typo can never stop a chart from being drawn. Colours are #rgb or #rrggbb.
+
+name: CBGP
+
+# Font family names, comma separated. The first one found on the viewer's machine is used;
+# Carlito is the free font that looks like Calibri (the PNG made on the server uses it).
+font: Calibri, Carlito, "DejaVu Sans", Arial, sans-serif
+
+# The page itself. "highlight" is the colour of callouts such as the "today" line.
+colors:
+  background: "#ffffff"
+  text: "#262626"
+  muted: "#666666"
+  band: "#f2f5f2"
+  grid: "#dfe5df"
+  highlight: "#c0392b"
+
+# Colours for the categories of a chart (funding sources, record types, ...), in order. A chart takes
+# as many as it has categories, so list at least as many as the biggest chart you expect (up to 24).
+# CBGP green, amber, blue, leaf green and charcoal (the last two are from the logo), then others.
+series:
+  - "#007336"
+  - "#c58b00"
+  - "#2a78b5"
+  - "#68af27"
+  - "#4c4c4c"
+  - "#b5532a"
+  - "#8a5ab5"
+  - "#2a9fa6"
+
+# A category that must ALWAYS have the same colour, wherever it appears (any case, accents ignored).
+# Anything not listed here takes the next colour from the series above.
+categories: {}
+#  European: "#2a78b5"
+#  Private: "#b5532a"
+
+# Used on a dark page only (a viewer whose system is in dark mode). Optional: omit it to keep these.
+dark:
+  background: "#161b22"
+  text: "#e6e9ee"
+  muted: "#9aa4b2"
+  band: "#1e252e"
+  grid: "#2c3542"
+  highlight: "#ff7b6b"
+
+# A line printed under every chart (leave out for none). Also used in the downloaded SVG and PNG.
+footer: ""

@@ -90,7 +90,7 @@ RSpec.describe Mcp::Widgets::Timeline, 'label placement' do
   let(:today) { Date.new(2026, 10, 8) }
 
   def labels(rows)
-    described_class.render(rows: rows, today: today)[:html].scan(%r{<text class="(lbl[^"]*)" x="([\d.]+)"[^>]*text-anchor="(\w+)">([^<]*)</text>})
+    described_class.render(rows: rows, today: today)[:html].scan(%r{<text class="(lbl[^"]*)" x="([\d.]+)"[^>]*text-anchor="(\w+)"[^>]*>([^<]*)</text>})
   end
 
   it 'never starts a label left of the lane-name gutter' do
@@ -298,12 +298,11 @@ RSpec.describe Mcp::Tools::RenderTimeline, 'outputs' do
       expect(summary['attached']).to eq('html' => false, 'png' => true)
     end
 
-    it 'attaches only the widget by default, and never rasterizes' do
-      expect(Mcp::Widgets::Raster).not_to receive(:png)
+    it 'attaches only the PNG by default, and tells the model not to paste markup' do
       content, summary = run
-      expect(content.map { |b| b[:type] }).to eq(%w[text resource])
-      expect(summary['attached']).to eq('html' => true, 'png' => false)
-      expect(summary['note']).to include('Download SVG', 'Download PNG')
+      expect(content.map { |b| b[:type] }).to eq(%w[text image])
+      expect(summary['attached']).to eq('html' => false, 'png' => true)
+      expect(summary['note']).to include('PNG', 'never paste HTML')
     end
 
     it 'attaches only the widget for html, and never rasterizes' do
@@ -323,6 +322,12 @@ RSpec.describe Mcp::Tools::RenderTimeline, 'outputs' do
       expect(summary['attached']).to eq('html' => true, 'png' => false)
     end
 
+    it 'falls back to the widget by default and tells the model why' do
+      content, summary = run
+      expect(content.map { |b| b[:type] }).to eq(%w[text resource])
+      expect(summary['note']).to include('PNG could not be made')
+    end
+
     it 'falls back to the widget for png and tells the model why' do
       content, summary = run('output' => 'png')
       expect(content.map { |b| b[:type] }).to eq(%w[text resource])
@@ -331,11 +336,11 @@ RSpec.describe Mcp::Tools::RenderTimeline, 'outputs' do
   end
 
   it 'refuses an unknown output, listing the choices' do
-    expect { described_class.invoke('rows' => rows, 'output' => 'gif') }.to raise_error(Mcp::ToolError, /html, png, both/)
+    expect { described_class.invoke('rows' => rows, 'output' => 'gif') }.to raise_error(Mcp::ToolError, /png, html, both/)
   end
 
   it 'offers the output choice in the schema' do
-    expect(described_class.input_schema[:properties]['output'][:enum]).to eq(%w[html png both])
+    expect(described_class.input_schema[:properties]['output'][:enum]).to eq(%w[png html both])
   end
 end
 

@@ -4,6 +4,45 @@ require_relative '../records'
 
 module Mcp
   module Tools
+    # The conditions every tool that selects records accepts, described once.
+    WHERE_SCHEMA = {
+      type: 'array',
+      description: 'Conditions that must ALL hold. Omit to use every record of the form. One condition per field.',
+      items: {
+        type: 'object',
+        properties: {
+          field: { type: 'string', description: 'Field name from describe_form' },
+          op: { type: 'string', enum: Records::OPS.keys,
+                description: 'contains (default, ignores case/accents) | equals (exact: ids, DNI, codes) | ' \
+                             'not_contains | not_equals | between | on_or_after | on_or_before (the last three: date fields only)' },
+          value: { type: 'string', description: 'Text to match; for a date op, the date. Fixed-list fields: the id or the label' },
+          start: { type: 'string', description: 'between only: first date, YYYY-MM-DD or "today"' },
+          end: { type: 'string', description: 'between only: last date, YYYY-MM-DD or "today"' },
+          or_empty: { type: 'boolean', description: 'true = also accept records with no value in this field' }
+        },
+        required: ['field']
+      }
+    }.freeze
+
+    # The same conditions, without the long descriptions, for the tools that only reuse them (search_records
+    # carries the full explanation): keeps the cost of listing every tool down.
+    WHERE_SCHEMA_BRIEF = {
+      type: 'array',
+      description: 'Conditions that must ALL hold, as in search_records: [{field, op, value | start/end, or_empty}]. Omit to use every record.',
+      items: {
+        type: 'object',
+        properties: {
+          field: { type: 'string', description: 'Field name' },
+          op: { type: 'string', enum: Records::OPS.keys, description: 'Default contains' },
+          value: { type: 'string', description: 'Text or date to match' },
+          start: { type: 'string', description: 'between only' },
+          end: { type: 'string', description: 'between only' },
+          or_empty: { type: 'boolean', description: 'Also accept records with no value' }
+        },
+        required: ['field']
+      }
+    }.freeze
+
     class SearchRecords < Mcp::Tool
       DEFAULT_LIMIT = 25
       MAX_LIMIT = 200
@@ -31,22 +70,7 @@ module Mcp
         (show each label and a distinguishing detail); never pick one yourself.
       TEXT
       param :form, type: 'string', required: true, description: 'Form name from describe_form'
-      param :where, type: 'array',
-                    description: 'Conditions that must ALL hold. Omit to list every record of the form. One condition per field.',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        field: { type: 'string', description: 'Field name from describe_form' },
-                        op: { type: 'string', enum: Records::OPS.keys,
-                              description: 'contains (default, ignores case/accents) | equals (exact: ids, DNI, codes) | ' \
-                                           'not_contains | not_equals | between | on_or_after | on_or_before (the last three: date fields only)' },
-                        value: { type: 'string', description: 'Text to match; for a date op, the date. Fixed-list fields: the id or the label' },
-                        start: { type: 'string', description: 'between only: first date, YYYY-MM-DD or "today"' },
-                        end: { type: 'string', description: 'between only: last date, YYYY-MM-DD or "today"' },
-                        or_empty: { type: 'boolean', description: 'true = also accept records with no value in this field' }
-                      },
-                      required: ['field']
-                    }
+      param :where, **Mcp::Tools::WHERE_SCHEMA
       param :fields, type: 'array', items: { type: 'string' },
                      description: 'Only return these fields (names from describe_form). Saves space on wide forms.'
       param :limit, type: 'integer', description: "Records per page (default #{DEFAULT_LIMIT}, max #{MAX_LIMIT}). 0 = count only: returns the total, no records"

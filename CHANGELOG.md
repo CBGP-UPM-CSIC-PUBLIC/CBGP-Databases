@@ -12,6 +12,49 @@ here.
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-10-13
+
+No ontology change.
+
+### Added
+- **Charts for the AI agent**: `chart_over_time` (a count or total over the years: bars,
+  stacked, percent, lines, areas) and `chart_breakdown` (by category, as things are now).
+  Each fetches the data itself, draws it on the server in the institute's theme and returns
+  a **PNG image by default** (the model reads only a file name, not the picture). Two
+  shapes: `slide` (16:9) and `report` (3:2, for a Word column). Every chart has a title and
+  a caption saying what was counted, when, and how many records were read; records with no
+  value appear as "(none)" and anything excluded is reported. `output: html` returns the
+  interactive page instead (SVG and PNG downloads in both shapes, and the numbers as a file
+  that opens in Excel); `both` returns the page and the PNG. English and Spanish.
+- **`aggregate`**: counts, totals and averages by category and by calendar year, computed on
+  the server from a lean fetch (a large form takes well under a second). Years can be taken
+  from a date, from "active at the end of the year", "active during the year", or spread
+  over the years a commitment covers.
+- **Branding in a mounted file**: colours, font and footer line come from `theme/theme.yml`
+  (or the path in `CBGP_THEME_FILE`), re-read whenever the file changes, validated, with a
+  per-setting fallback so a typo never stops a chart. See `theme/theme.example.yml`. Without
+  a file the built-in CBGP look is used. The timeline uses the same theme.
+- Documentation (English and Spanish): charts, branding the charts, and what each tool costs
+  in tokens (`utilities/mcp_cost_report.rb` measures it).
+
+### Changed
+- **`render_timeline` now returns a PNG image by default**, like the charts. The interactive
+  page made some agents paste its source into their answer; ask for `output: html` to get it.
+- The instructions sent to the agent when it connects now cover `aggregate` and the chart
+  tools (including "forms that share a storage name are charted together in one call", "call
+  one tool at a time" and "never write plotting code"), and the tool summaries open with the
+  words people use ("Make a bar chart of ..."). The tools together add about 7,250 tokens to
+  every request; the cost report shows where they go.
+
+### Upgrading
+**Rebuild the image** (it needs `rsvg-convert` and a font, already in the Dockerfile since
+0.19.0). To brand the charts without rebuilding, copy `theme/theme.example.yml` to
+`theme/theme.yml` and mount `./theme:/server/theme:ro` (see `docker-compose.yml`). Then in
+Hermes run `/reload-mcp` and start a new chat; tool lists and instructions are read when a
+session starts. The Spanish text of the new documentation and of the charts' captions has not
+had a native read-through, and the colours are sampled from the CBGP logo until official ones
+are supplied.
+
 ## [0.19.0] - 2026-10-09
 
 **Ontology change** (CBGP-Ontology `bb52835`): every form, and the `cbgp:forms` class,

@@ -177,7 +177,7 @@ RSpec.describe 'MCP tool descriptors' do
   end
 
   it 'keep the whole name-and-summary listing small' do
-    expect(tools.sum { |t| t.tool_name.length + t.summary.length }).to be < 900
+    expect(tools.sum { |t| t.tool_name.length + t.summary.length }).to be < 1300 # about 130 characters a tool: still a cheap listing
   end
 
   it 'describe every parameter, so the schema alone is enough to make a call' do
