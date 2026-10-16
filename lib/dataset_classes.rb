@@ -918,6 +918,24 @@ module CBGP
         details = details_array.first || { dataset: graph }
       end
 
+      # A caller-supplied graph URI that doesn't actually hold this record's
+      # data (wrong URI, typo, stale value) must fail loudly here, not
+      # produce a validly-shaped but empty Dataset - the only two callers of
+      # this method either display it (harmless either way) or write it
+      # straight back to the database as a REPLACEMENT for the real
+      # record (catastrophic if "empty" silently means "every other field
+      # is now gone"). Confirmed live 2026-10-15: exactly this silent
+      # failure, caused by a caller passing a subject URI
+      # (.../member/dataset/<id>) where the actual named graph
+      # (.../member/context/<id>) was needed, destroyed all but one field
+      # on 704 real member records before anyone noticed - every one of
+      # them "worked" without raising a single error.
+      if details.keys.reject { |k| k == :dataset }.empty?
+        abort "load_from_graph: graph #{graph} yielded no #{database} field data at all - " \
+              'refusing to return an empty-looking Dataset (did you pass a subject URI ' \
+              'instead of the actual named graph URI?)'
+      end
+
       assign_stored_values(dataset, details)
 
       dataset

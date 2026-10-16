@@ -1079,6 +1079,26 @@ end
 #   +dataset.form_type+ (the dbname) when not given, which is only correct
 #   for a dbname with exactly one form - callers that know the true form
 #   (i.e. +load_from_params_and_write+) must pass it explicitly.
+# True if replacing a record with +old_field_count+ real fields by one with
+# only +new_field_count+ looks like silent data loss rather than a genuine
+# edit - the actual decision write_dataset_to_db_query's safety net acts
+# on, pulled out as its own pure function so it's directly testable without
+# needing to mock any part of the SPARQL-heavy write path around it (see
+# [[feedback_top_level_method_stubbing]] - a bare top-level function calling
+# another bare top-level function can't be reliably intercepted by
+# allow(Object).to receive(...) anyway, so keeping the actual logic this
+# small and pure is the more honest way to cover it).
+#
+# Deliberately conservative: only fires on NEAR-TOTAL loss of a record that
+# previously had real substance (>3 fields down to <=1) - an HTML form
+# submission always resubmits every field, so a genuine save from the live
+# app never looks like this; a record that only ever had 1-3 fields to
+# begin with, or an edit that trims some-but-not-nearly-all fields, is left
+# alone.
+def looks_like_silent_data_loss?(old_field_count:, new_field_count:)
+  old_field_count > 3 && new_field_count <= 1
+end
+
 # @return [String] the complete SPARQL UPDATE query string
 def write_dataset_to_db_query(dataset:, oldid: nil, form: nil)
   # dataset.form_type is the specific FORM class (that is what load_from_params_and_write
@@ -1097,6 +1117,17 @@ def write_dataset_to_db_query(dataset:, oldid: nil, form: nil)
     old_graph_uri = "#{BASE_URI}#{database}/context/#{oldid}"
     old_values = fetch_datasets_raw_data(graph_uris: [old_graph_uri], database: database).first || {}
     detail = summarize_field_changes(fields: dataset.fields, old_values: old_values, new_dataset: dataset)
+
+    old_field_count = old_values.keys.reject { |k| k == :dataset }.size
+    new_field_count = dataset.fields.count do |f|
+      dataset.respond_to?(f[:method]) && !blank_field_value?(dataset.public_send(f[:method]))
+    end
+    if looks_like_silent_data_loss?(old_field_count: old_field_count, new_field_count: new_field_count)
+      abort "write_dataset_to_db_query: refusing to replace #{database} record #{oldid} " \
+            "(previously #{old_field_count} field(s)) with one that has only #{new_field_count} - this looks " \
+            'like data loss, not an edit. If this is genuinely intentional, delete the record explicitly instead.'
+    end
+
     captured = delete_dataset_query(oldid: old_graph_uri, reason: 'superseded', detail: detail)
   end
 

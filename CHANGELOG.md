@@ -12,6 +12,44 @@ here.
 
 ## [Unreleased]
 
+No ontology change.
+
+### Added
+- **Real institute data, loaded and verified for the first time**: personnel (change-log history
+  + the true current-activity snapshot, reconciled against each other), a sample of real DOIs
+  cross-referenced to personnel by ORCID, and a reproducible build pipeline
+  (`utilities/build_derived_inputs.py` + `utilities/personnel_loader.rb` +
+  `utilities/activos_consolidation_loader.rb`) that regenerates the whole thing from the
+  institute's source files alone.
+- **`utilities/audit_data_integrity.rb`**: on-demand check for under-populated current records
+  or history with no surviving current version, for any form type.
+- **DOI loading now harvests a co-author's self-asserted ORCID** from the publication's own
+  metadata onto their member record when they're name-matched but have none on file yet -
+  closes future gaps automatically, not just at load time.
+- A generic safety net in the write path (`looks_like_silent_data_loss?` in `lib/queries.rb`)
+  refuses any update that would collapse a substantial existing record down to almost nothing -
+  added after exactly that happened once during today's load (see Fixed).
+
+### Fixed
+- `cached_label_for_id` crashed the entire save transaction whenever a stored value didn't look
+  like a valid ontology id, instead of falling back to the raw value as its caller already
+  expected.
+- The personnel name-matcher missed real matches whenever a surname was punctuated with a
+  hyphen instead of a space, or a compound given name was abbreviated to an initial - both
+  real, routine shapes in journal/DOI-registry metadata.
+- `CBGP::Dataset.load_from_graph` silently returned an empty-looking record instead of raising
+  when given a graph URI that held no data for it.
+- A one-off batch script given the wrong RDF graph URI for an update destroyed every field but
+  one on 704 real member records before being caught; recovered from each record's own
+  intact history, then the whole load redone from scratch for a clean, reproducible result.
+
+### Thanks
+Mark caught several of today's real findings himself, not just reviewed them after the fact -
+spotting a real person missing from the data by checking ORCID.org by hand, questioning why a
+~20% "no matching author" rate made sense for papers already known to be the institute's own
+(which led straight to finding the 704-record bug above), and catching a stale duplicate report
+file before it could go out to the wrong person.
+
 ## [0.20.0] - 2026-10-13
 
 No ontology change.

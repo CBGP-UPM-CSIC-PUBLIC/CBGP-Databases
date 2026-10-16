@@ -209,7 +209,21 @@ LABEL_LOOKUP_CACHE = {} # rubocop:disable Style/MutableConstant -- intentionally
 
 def cached_label_for_id(id:, language: current_language)
   key = "#{id}_#{language}"
-  LABEL_LOOKUP_CACHE.fetch(key) { LABEL_LOOKUP_CACHE[key] = get_label_for_id(id: id, language: language) }
+  LABEL_LOOKUP_CACHE.fetch(key) do
+    LABEL_LOOKUP_CACHE[key] =
+      begin
+        get_label_for_id(id: id, language: language)
+      rescue ArgumentError
+        # get_label_for_id's validate_local_name! guard is a deliberate
+        # SPARQL-injection boundary and must stay strict - but a stored
+        # value that doesn't look like a valid id (e.g. legacy free text
+        # that slipped past an earlier load's controlled-vocabulary check)
+        # should just fail to resolve a pretty label, not crash whatever
+        # display/summary call asked for one. Caller already falls back to
+        # the raw value on nil (see resolve_display_value).
+        nil
+      end
+  end
 end
 
 # Resolves a single stored field value for display: currency amounts are

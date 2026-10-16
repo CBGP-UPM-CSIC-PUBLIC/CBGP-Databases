@@ -122,7 +122,12 @@ def set_routes
     Questionnaire.clear_cache!
     CBGP::Triggers.clear_cache!
     CBGP::UIText.clear_cache! # interface texts are ontology labels too
-    Thread.new { Mcp::Records.warm_up } unless ENV['MCP_TOKEN'].to_s.strip.empty? # the AI agent's own ontology cache starts empty again
+    # the AI agent's own ontology cache starts empty again
+    unless ENV['MCP_TOKEN'].to_s.strip.empty?
+      Thread.new do
+        Mcp::Records.warm_up
+      end
+    end
     redirect '/cbgp/dashboard'
   end
   # ----------------------------------------------------------------------------
@@ -412,7 +417,8 @@ def set_routes
   # Ensure the full route context is included
   get '/cbgp/search-dataset/:database' do
     @database = params[:database]
-    @questionnaire = generate_questionnaire(questionnaire_type: @database, only_fields: search_field_restriction(@database))
+    @questionnaire = generate_questionnaire(questionnaire_type: @database,
+                                            only_fields: search_field_restriction(@database))
     @entry = CBGP::Dataset.new(type: @database)
     @mode = 'search'
     halt erb :search_dataset_inputform, layout: :database_layout
@@ -421,7 +427,8 @@ def set_routes
   get '/cbgp/search-dataset' do # creates the search page iwth database in the POST body
     @database = params[:database]
     halt 400, 'Database parameter is required' unless @database
-    @questionnaire = generate_questionnaire(questionnaire_type: @database, only_fields: search_field_restriction(@database))
+    @questionnaire = generate_questionnaire(questionnaire_type: @database,
+                                            only_fields: search_field_restriction(@database))
     @entry = CBGP::Dataset.new(type: @database)
     @mode = 'search'
     halt erb :search_dataset_inputform, layout: :database_layout
@@ -432,7 +439,10 @@ def set_routes
   # search form when this session has no search for that database (e.g. the
   # session expired), rather than a dead end.
   get '/cbgp/last-search/:database' do
-    halt erb(:search_dataset_resultform, layout: :database_layout) if render_last_search_results(database: params[:database])
+    if render_last_search_results(database: params[:database])
+      halt erb(:search_dataset_resultform,
+               layout: :database_layout)
+    end
 
     redirect "/cbgp/search-dataset/#{Rack::Utils.escape_path(params[:database])}"
   end
@@ -697,12 +707,27 @@ def set_routes
   post '/cbgp/publications/bulk' do
     dois = params[:dois]
     # creates a shared @messages variable for errors
-    _allpubs, @messages = CBGP::Loaders.bulk_load_from_dois(dois: dois) if dois
+    if dois
+      _allpubs, @messages, @orcid_job_id, @orcid_estimate_seconds = CBGP::Loaders.bulk_load_from_dois(dois: dois)
+    end
     halt erb :bulkpubs
   end
 
   get '/cbgp/publications/bulk' do
     halt erb :bulkpubs
+  end
+
+  # Polled by the bulk-load page while a background ORCID-mining job (see
+  # CBGP::Loaders.bulk_load_from_dois) is still running, so the user sees
+  # real progress instead of no feedback at all for what can be several
+  # minutes. In-memory only (CBGP::OrcidMiningJobs) - no job queue exists
+  # in this app.
+  get '/cbgp/publications/bulk/orcid_status/:job_id' do
+    content_type :json
+    job = CBGP::OrcidMiningJobs.status(params[:job_id])
+    halt 404, { error: 'unknown job id' }.to_json unless job
+
+    job.to_json
   end
 
   ################# DUMPERS
@@ -801,6 +826,11 @@ def set_routes
         pre_fetched_primary_id: primary_ids_by_graph[graphuri]
       )
     end
+    # Alphabetical by surname; unaccent first so e.g. "Álvarez" sorts with
+    # "A" rather than after "Z" (same helper used for accent-insensitive
+    # search, see lib/queries.rb).
+    @datasets.sort_by! { |ds| unaccent(ds.surname.to_s).downcase }
+
     content_type 'application/xml', charset: 'utf-8'
     #    content_type 'text/plain', charset: 'utf-8'
     halt erb :xmlemail
@@ -860,7 +890,13 @@ def set_routes
       # and saving re-stamps the record with it.
       record_form = get_record_form(primary_id: clean_identifier)
       if record_form && record_form != database && !CBGP::Dataset.fields_for(record_form).empty?
-        target = session[:role] == 'admin' ? curation_targets(record_form).find { |_label, form| form == database } : nil
+        target = if session[:role] == 'admin'
+                   curation_targets(record_form).find do |_label, form|
+                     form == database
+                   end
+                 else
+                   nil
+                 end
         unless target
           redirect "/cbgp/dataset/#{ERB::Util.url_encode(record_form)}/#{ERB::Util.url_encode(clean_identifier)}"
         end

@@ -36,6 +36,33 @@
         </ul>
       </div>
     <% end %>
+      <% if @orcid_job_id %>
+      <div id="orcid-mining-status" data-job-id="<%= @orcid_job_id %>">
+        Looking up missing ORCIDs for the newly-loaded authors in the background
+        (about <%= (@orcid_estimate_seconds / 60.0).ceil %> minute(s) estimated)...
+      </div>
+      <script>
+        (function () {
+          var el = document.getElementById('orcid-mining-status');
+          if (!el) return;
+          var jobId = el.getAttribute('data-job-id');
+          var poll = function () {
+            fetch('/cbgp/publications/bulk/orcid_status/' + jobId)
+              .then(function (res) { return res.json(); })
+              .then(function (job) {
+                if (job.done) {
+                  el.textContent = 'ORCID lookup finished: ' + job.found + ' of ' + job.total + ' found.';
+                } else {
+                  el.textContent = 'Looking up missing ORCIDs... ' + job.searched + ' of ' + job.total + ' checked so far.';
+                  setTimeout(poll, 3000);
+                }
+              })
+              .catch(function () { /* job may have expired on an app restart - stop polling silently */ });
+          };
+          setTimeout(poll, 3000);
+        })();
+      </script>
+      <% end %>
     </div>
 
     <div class="databases">

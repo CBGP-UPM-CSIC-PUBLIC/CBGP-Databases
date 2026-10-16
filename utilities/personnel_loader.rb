@@ -3,8 +3,27 @@ Dotenv.load(File.expand_path('../.env', __dir__)) # the project root's .env, not
 require 'require_all'
 require_all '../app'
 require 'date'
+require 'set'
 
 abort 'must provide input csv file' unless ARGV[0]
+
+# ARGV[1] (optional): id_CBGP.csv - the institute's own legacy numeric
+# member ids, keyed by name (not DNI - it has no DNI column at all). Used
+# only to fill in member_cbgp_id for continuity with pre-existing
+# ids/webpages/images; never used as the SCD grouping key (see below).
+#
+# ARGV[2] (optional): activos_export.csv (the DNI/NIE/PAS column of
+# usuarios_activos, via the same Python conversion activos_consolidation_
+# loader.rb uses) - used ONLY to decide member_status for each person's
+# current version here (active -> left unset, since activos_consolidation_
+# loader.rb immediately overwrites that person's current record with the
+# authoritative snapshot anyway; not-active -> 'historical'). Deliberately
+# set as part of THIS write, not a later patch pass: a prior session
+# (2026-10-15) ran that status fix as a separate "load the existing record,
+# change one field, write it back" pass, and a graph-URI mistake in that
+# pass silently wiped every other field on all 704 non-active records -
+# recovered from history afterward, but the real fix is to never need that
+# kind of patch pass in the first place. See [[project_doi_xref_gap_closing]].
 
 # a dataset has #fields which is a sequence-ordered list of
 # @fields << { q: q, questionclass: questionclass, label: result[:label].to_s,
@@ -92,7 +111,7 @@ end
 # answer block (radio/hiddenfield/treeselector - see
 # controlled_vocabulary_field?, lib/core.rb), fetched once per distinct
 # block and cached. Some of this export's values are informal group/lab
-# descriptions rather than a real answer id (e.g. "Pablo Rodriguez/Emilia:
+# descriptions rather than a real answer id (e.g. "Lab Group 3/Legacy note:
 # Phytopathogenic bacteria" for member_research_area_group) - genuinely not
 # yet in the ontology's tree, not a parsing bug - see MISSED_VALUES below.
 # rubocop:disable Style/MutableConstant -- both intentionally mutated caches/accumulators
@@ -128,30 +147,164 @@ end
 MISSED_VALUES = []
 # rubocop:enable Style/MutableConstant
 
-# True (and logs to MISSED_VALUES) if this is a controlled-vocabulary field
-# whose value isn't one of that field's real ontology answer ids - the
-# caller should skip setting it. Always false for free-text/date/etc.
-# fields, which have no fixed answer set to check against.
-def missed_ontology_value?(cbgp_id:, primary_id:, field:, value:, member_fields:)
-  questionclass = HEADER_ALIASES.fetch(field, field)
-  field_def = member_fields.find { |f| f[:questionclass] == questionclass }
-  return false unless controlled_vocabulary_field?(field_def)
-  return false if valid_answer_ids_for(field_def).include?(value.strip)
+# A handful of Sara's export values are a genuine language gap, not just
+# formatting - confirmed live 2026-10-15 for exactly this one case ("Corea
+# del Sur" is Spanish for South Korea; the real ontology id is
+# "southkorea"). Kept as an explicit, verified, one-at-a-time list rather
+# than attempted machine translation - each entry here was individually
+# confirmed to resolve to a real ontology answer id before being added.
+ANSWER_VALUE_ALIASES = {
+  'Corea del Sur' => 'southkorea'
+}.freeze
 
-  MISSED_VALUES << { cbgp_id: cbgp_id, primary_id: primary_id, questionclass: questionclass, value: value.strip }
-  warn "  MISSED: cbgp_id=#{cbgp_id} #{questionclass}=#{value.strip.inspect} is not a real " \
-       "#{field_def[:answers].to_s.split('#').last} answer id - logged, not written"
-  true
+# Sara's export sometimes differs from the real ontology id only by case or
+# underscore-vs-hyphen punctuation (e.g. "Mexico" for the real "mexico",
+# "ra_none" for the real "ra-none") - confirmed live 2026-10-15 this
+# accounts for the large majority of what a naive exact-match check flags
+# as "missing from the ontology", not genuine gaps. unaccent is NOT applied
+# here (unlike name/surname matching elsewhere) - an ontology answer id is
+# a controlled code, not natural-language text, so an actual accent
+# difference would be a real typo worth seeing, not something to paper over.
+def normalize_answer_candidate(value)
+  value.to_s.strip.downcase.tr('_', '-')
 end
 
-rows = CSV.read(ARGV[0], headers: true).map(&:to_h)
-by_person = rows.group_by { |r| r['member_cbgp_id'] }
+# Resolves a controlled-vocabulary field's raw export value to a real
+# ontology answer id, trying (in order): the value as-is, a case/punctuation-
+# normalized match, then the explicit ANSWER_VALUE_ALIASES list. Returns the
+# resolved id (ontology-correct, not necessarily the original string) for a
+# controlled-vocabulary field, the original value unchanged for any other
+# field, or nil (and logs to MISSED_VALUES) when nothing resolves - the
+# caller should skip setting the field in that case.
+def resolve_controlled_vocabulary_value(person_key:, primary_id:, field:, value:, member_fields:)
+  questionclass = HEADER_ALIASES.fetch(field, field)
+  field_def = member_fields.find { |f| f[:questionclass] == questionclass }
+  return value unless controlled_vocabulary_field?(field_def)
+
+  stripped = value.strip
+  valid_ids = valid_answer_ids_for(field_def)
+  return stripped if valid_ids.include?(stripped)
+
+  normalized_target = normalize_answer_candidate(stripped)
+  normalized_match = valid_ids.find { |id| normalize_answer_candidate(id) == normalized_target }
+  return normalized_match if normalized_match
+
+  aliased = ANSWER_VALUE_ALIASES[stripped]
+  return aliased if aliased && valid_ids.include?(aliased)
+
+  MISSED_VALUES << { person_key: person_key, primary_id: primary_id, questionclass: questionclass, value: stripped }
+  warn "  MISSED: person=#{person_key} #{questionclass}=#{stripped.inspect} is not a real " \
+       "#{field_def[:answers].to_s.split('#').last} answer id - logged, not written"
+  nil
+end
+
+# Sara's export tool doesn't always save UTF-8 (seen: ISO-8859-1, likely a
+# Windows/Excel default under a Spanish locale) - detect rather than assume.
+# col_sep is ';', not CSV's default ',' - this export uses semicolons
+# throughout (same Spanish-locale Excel habit: ',' is the decimal separator
+# there, so list exports use ';'). Without col_sep set explicitly, Ruby's
+# CSV parser still scans for the default comma and desyncs its quote-state
+# tracking on this file's multi-line quoted comment fields, surfacing as a
+# misleading "Illegal quoting" error that has nothing to do with the quotes
+# themselves (confirmed: Python's csv module parses the same bytes cleanly
+# once told the real delimiter).
+def read_csv_robustly(path)
+  CSV.read(path, headers: true, col_sep: ';')
+rescue CSV::InvalidEncodingError
+  CSV.read(path, headers: true, col_sep: ';', encoding: 'ISO-8859-1:UTF-8')
+end
+
+# Grouping identity: normalized national id (DNI/NIE/passport), not
+# member_cbgp_id. A fresh raw export from Sara does NOT have member_cbgp_id
+# pre-populated (only a prior hand-merged file did, see memory) - it's
+# blank for nearly every row. member_dni_nie_pas is ~99.5% populated and is
+# what actually identifies "the same person" across their own history rows,
+# even when their name is spelled differently from one row to the next
+# (confirmed real: "Makarovsky Saavedra" vs "Makarowsky", same DNI).
+def normalize_dni(value)
+  value.to_s.strip.upcase.gsub(/[\s-]/, '')
+end
+
+# This export's own placeholder DNIs ('-', blank, all-one-character strings
+# like "XXXXXX"/"XXXXXXXX") are NOT a shared identity - several different
+# real people share the same placeholder, so each such row must be its own
+# singleton "person", never merged with the others just because they share
+# the placeholder. A genuine NIE legitimately starts with X/Y/Z (e.g.
+# "X3625323V") - only an all-same-character value is a placeholder.
+def placeholder_dni?(dni)
+  dni.empty? || dni.chars.uniq.size <= 1
+end
+
+# Accent/case/whitespace-normalized "given surname" key, for matching a
+# person against id_CBGP.csv's name-keyed legacy ids. unaccent is
+# lib/queries.rb's existing helper (already loaded via require_all '../app'
+# above) - reused rather than reimplemented.
+def normalize_person_name(given, surname)
+  unaccent("#{given} #{surname}").downcase.gsub(/[.-]/, ' ').gsub(/\s+/, ' ').strip
+end
+
+id_name_to_ids = Hash.new { |h, k| h[k] = Set.new }
+if ARGV[1]
+  CSV.foreach(ARGV[1], headers: true) do |r|
+    next if r['member_cbgp_id'].to_s.strip.empty?
+
+    key = normalize_person_name(r['member_name'], r['member_surnames'])
+    id_name_to_ids[key] << r['member_cbgp_id'].strip
+  end
+end
+
+activos_dnis = Set.new
+if ARGV[2]
+  CSV.foreach(ARGV[2], headers: true) do |r|
+    activos_dnis << normalize_dni(r['DNI/NIE/PAS'])
+  end
+end
+
+# Rows accumulated here get written to a "*_needs_cbgp_id_curation.csv"
+# report at the end: every person who didn't resolve to exactly one real
+# legacy id from id_CBGP.csv. Per explicit user decision (2026-10-15): such
+# a person's record and history still load normally (member_cbgp_id is a
+# display/continuity attribute, not the SCD identity, and never blocks a
+# load) - they just don't get a made-up number. An admin reviews this
+# report later and assigns a real id by hand if one exists.
+# rubocop:disable Style/MutableConstant -- intentionally mutated accumulator
+NEEDS_CURATION = []
+# Rows accumulated here get written to a "*_status_anomalies_curation.csv"
+# report: a non-activos person whose own change-log data conflicts with
+# "absent from activos = historical" (it already says active, or never
+# recorded an end date). Left with no status at all rather than guessed in
+# either direction - see the write loop below for the full reasoning.
+STATUS_ANOMALIES = []
+# rubocop:enable Style/MutableConstant
+
+rows = read_csv_robustly(ARGV[0]).map(&:to_h)
+
+by_person = {}
+rows.each_with_index do |r, i|
+  dni = normalize_dni(r['member_dni_nie_pas'])
+  key = placeholder_dni?(dni) ? "__no_dni_row#{i}__" : dni
+  (by_person[key] ||= []) << r
+end
 
 swap_count = 0
 person_count = 0
 version_count = 0
 
-by_person.each do |cbgp_id, person_rows|
+by_person.each do |dni_key, person_rows|
+  # Resolve this person's legacy member_cbgp_id, trying every name variant
+  # seen across their own rows (spelling drift across a person's history is
+  # exactly what DNI-grouping exists to paper over - the match should too).
+  name_variants = person_rows.map { |r| normalize_person_name(r['member_name'], r['member_surnames']) }.uniq
+  found_ids = name_variants.each_with_object(Set.new) { |nv, acc| acc.merge(id_name_to_ids[nv]) }
+  resolved_cbgp_id =
+    if found_ids.size == 1
+      found_ids.first
+    else
+      NEEDS_CURATION << { dni_key: dni_key, names: name_variants.join('; '),
+                           candidate_ids: found_ids.to_a.join(',') }
+      nil
+    end
+  person_rows.each { |r| r['member_cbgp_id'] = resolved_cbgp_id.to_s }
   # Step 1: fix inverted start/end, on the raw row hash, before sorting.
   corrected_rows = person_rows.map do |row|
     row = row.dup
@@ -160,7 +313,7 @@ by_person.each do |cbgp_id, person_rows|
     if start_date && end_date && end_date < start_date
       row['member_start_date'], row['member_end_date'] = row['member_end_date'], row['member_start_date']
       swap_count += 1
-      warn "  fixed inverted start/end for cbgp_id=#{cbgp_id} (was #{end_date} - #{start_date})"
+      warn "  fixed inverted start/end for person=#{dni_key} (was #{end_date} - #{start_date})"
     end
     row
   end
@@ -175,7 +328,8 @@ by_person.each do |cbgp_id, person_rows|
 
   primary_id = SecureRandom.uuid
   person_count += 1
-  puts "cbgp_id=#{cbgp_id}: #{ordered_rows.size} version(s) -> primary_id=#{primary_id}"
+  puts "person=#{dni_key} (cbgp_id=#{resolved_cbgp_id || 'none yet'}): " \
+       "#{ordered_rows.size} version(s) -> primary_id=#{primary_id}"
 
   ordered_rows.each_with_index do |row, index|
     ds = CBGP::Dataset.new(type: 'member')
@@ -183,6 +337,7 @@ by_person.each do |cbgp_id, person_rows|
 
     row.each do |field, value|
       next if field.to_s =~ /DISCARD/
+      next if field == 'member_status' # set explicitly below, not from the raw export column
       # "-" is this export's own placeholder for "no value" (seen elsewhere
       # in the same export, e.g. a blank phone number) - harmless if left as
       # literal text in a free-text field, but crashes write_dataset_to_db_query's
@@ -194,8 +349,11 @@ by_person.each do |cbgp_id, person_rows|
       method_name = method_for_header(field, member_fields)
       abort "Dataset does not have a 'member' field matching CSV header '#{field}'" unless method_name
 
-      next if missed_ontology_value?(cbgp_id: cbgp_id, primary_id: primary_id, field: field, value: value,
-                                     member_fields: member_fields)
+      resolved_value = resolve_controlled_vocabulary_value(person_key: dni_key, primary_id: primary_id, field: field,
+                                                            value: value, member_fields: member_fields)
+      next if resolved_value.nil?
+
+      value = resolved_value
 
       if date_field?(field, member_fields)
         parsed = parse_export_date(value)
@@ -207,6 +365,36 @@ by_person.each do |cbgp_id, person_rows|
       ds.public_send("#{method_name}=", value)
     end
 
+    # Set status on this person's LAST (current) version only - a history
+    # version just represents "what was true at that point", not a status
+    # judgement. Active people get nothing here (activos_consolidation_
+    # loader.rb overwrites this same current record with the authoritative
+    # snapshot + status=active immediately after this script finishes);
+    # everyone else gets 'historical' directly, as part of this one write -
+    # no separate patch pass needed at all.
+    #
+    # Absence from activos is only trusted as "definitely historical" when
+    # the person's OWN last change-log row agrees - if that row itself
+    # already says active, or never recorded an end date at all (reads as
+    # "still ongoing" on its own terms), that's a genuine conflict between
+    # two real signals and gets curated, not silently overridden in either
+    # direction (same rule the 2026-10-15 sanity check used by hand).
+    if index == ordered_rows.size - 1 && !activos_dnis.include?(dni_key)
+      source_says_active = row['member_status'].to_s.strip == 'active'
+      no_end_date_recorded = parse_export_date(row['member_end_date']).nil?
+
+      if source_says_active || no_end_date_recorded
+        reason = if source_says_active
+                   'source says active but absent from activos'
+                 else
+                   'no end_date recorded but absent from activos'
+                 end
+        STATUS_ANOMALIES << { person_key: dni_key, primary_id: primary_id, reason: reason }
+      else
+        ds.status = 'historical'
+      end
+    end
+
     oldid = index.zero? ? nil : primary_id
     CBGP::Dataset.write_to_db(dataset: ds, oldid: oldid)
     version_count += 1
@@ -215,14 +403,30 @@ end
 
 missed_path = "#{ARGV[0].sub(/\.csv\z/i, '')}_missed.csv"
 CSV.open(missed_path, 'w') do |csv|
-  csv << %w[cbgp_id primary_id questionclass value]
-  MISSED_VALUES.each { |m| csv << [m[:cbgp_id], m[:primary_id], m[:questionclass], m[:value]] }
+  csv << %w[person_key primary_id questionclass value]
+  MISSED_VALUES.each { |m| csv << [m[:person_key], m[:primary_id], m[:questionclass], m[:value]] }
+end
+
+curation_path = "#{ARGV[0].sub(/\.csv\z/i, '')}_needs_cbgp_id_curation.csv"
+CSV.open(curation_path, 'w') do |csv|
+  csv << %w[dni_key names candidate_ids]
+  NEEDS_CURATION.each { |c| csv << [c[:dni_key], c[:names], c[:candidate_ids]] }
+end
+
+status_curation_path = "#{ARGV[0].sub(/\.csv\z/i, '')}_status_anomalies_curation.csv"
+CSV.open(status_curation_path, 'w') do |csv|
+  csv << %w[person_key primary_id reason]
+  STATUS_ANOMALIES.each { |a| csv << [a[:person_key], a[:primary_id], a[:reason]] }
 end
 
 puts
 puts "Done. #{person_count} people, #{version_count} record-versions written, " \
      "#{swap_count} inverted start/end pairs corrected."
 puts "#{MISSED_VALUES.size} controlled-vocabulary value(s) didn't match a real ontology answer id - see #{missed_path}"
+puts "#{NEEDS_CURATION.size} people did not resolve to exactly one real id_CBGP.csv id (loaded " \
+     "without member_cbgp_id) - see #{curation_path}"
+puts "#{STATUS_ANOMALIES.size} non-activos people had a conflicting status signal of their own (loaded " \
+     "without member_status) - see #{status_curation_path}"
 
 # =============================================================================
 # MANUAL HISTORY INJECTION - not part of the load above, never called by it.
