@@ -92,13 +92,8 @@ RSpec.describe CBGP::Dataset do
       it 'reports the failing field by its human label, not its internal method name' do
         described_class.load_from_params_and_write(params: params)
       rescue described_class::ValidationError => e
-        # personnel_project_total_funding is also required, so an unparseable
-        # value triggers two errors on the same field: the coercion failure
-        # itself, and "required" once the unparseable value is treated as
-        # blank - both must still use the human label, never the method name.
         expect(e.errors).to contain_exactly(
-          hash_including(label: 'Total funding', message: a_string_matching(/doesn't look like a valid amount/)),
-          hash_including(label: 'Total funding', message: a_string_matching(/is required/))
+          hash_including(label: 'Total funding', message: a_string_matching(/doesn't look like a valid amount/))
         )
       end
 

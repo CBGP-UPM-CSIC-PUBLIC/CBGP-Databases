@@ -65,10 +65,11 @@ RSpec.describe 'curating a submitted record' do
   end
 
   describe 'with the real ontology' do
-    it 'lets a submitted project be curated as each of the four project forms, in the user\'s language' do
+    it 'lets a submitted project be curated as each of the five project forms, in the user\'s language' do
       forms = curation_targets('userproject').map(&:last)
       expect(forms).to contain_exactly('european_research_project', 'national_regional_research_project',
-                                       'private_research_project', 'personnel_project')
+                                       'private_research_project', 'personnel_project',
+                                       'programa_propio_research_project')
     end
 
     it 'does not offer a curated project any other form' do

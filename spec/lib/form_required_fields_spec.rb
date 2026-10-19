@@ -15,8 +15,10 @@
 #   - cbgp:national_regional_research_project (Research) requires project_call_for_proposal_title
 #     (personnel_project doesn't have this field at all). The PI (project_pi_nie) is NOT
 #     such an example any more: every project form shares and requires it (2026-10-06).
-#   - cbgp:personnel_project (Personnel) requires personnel_project_total_funding
-#     (national_regional_research_project doesn't have this field at all)
+#   - cbgp:personnel_project (Personnel) requires project_funding_entity
+#     (national_regional_research_project doesn't have this field at all).
+#     personnel_project_total_funding used to be this example, but Sara's
+#     2026-10-15 restructuring stopped requiring it.
 RSpec.describe 'per-form required fields' do
   # project_pi_nie is a cross-reference field (references member via
   # member_dni_nie_pas); get_primary_id (primary-id lookup) calls execute_search -> a live
@@ -26,7 +28,7 @@ RSpec.describe 'per-form required fields' do
   before do
     {
       'national_regional_research_project' => 'project_call_for_proposal_title',
-      'personnel_project' => 'personnel_project_total_funding'
+      'personnel_project' => 'project_funding_entity'
     }.each do |form, qc|
       field = CBGP::Dataset.fields_for(form).find { |f| f[:questionclass] == qc }
       raise "fixture ontology no longer has '#{qc}' on '#{form}' - update this spec" unless field
@@ -36,9 +38,10 @@ RSpec.describe 'per-form required fields' do
   describe '#get_form_required_fields_query / .form_required_fields' do
     it 'resolves the Research form (national_regional_research_project) to its full required set' do
       expect(CBGP::Dataset.form_required_fields(form: 'national_regional_research_project')).to eq(Set[
-        'national_regional_research_funding_institution',
+        'project_affiliation',
         'project_application_url',
         'project_call_for_proposal_title',
+        'project_funding_institution',
         'project_internal_code',
         'project_pi_nie',
         'project_title'
@@ -50,7 +53,7 @@ RSpec.describe 'per-form required fields' do
 
     it 'resolves the Personnel form to its full required set, not overlapping on the Research-only field' do
       required = CBGP::Dataset.form_required_fields(form: 'personnel_project')
-      expect(required).to include('personnel_project_total_funding')
+      expect(required).to include('project_funding_entity')
       expect(required).not_to include('project_call_for_proposal_title') # Research-only
     end
 
@@ -74,7 +77,8 @@ RSpec.describe 'per-form required fields' do
         'primary_id' => '',
         'project_title' => 'A Research Project',
         'project_pi_nie' => '12345678Z',
-        'national_regional_research_funding_institution' => 'placeholder',
+        'project_funding_institution' => 'placeholder',
+        'project_affiliation' => 'affiliation_upm',
         'project_application_url' => 'https://example.org/call/TEST-CODE',
         'project_call_for_proposal_title' => 'Test Call',
         'project_internal_code' => 'TEST-INTERNAL',
@@ -115,20 +119,20 @@ RSpec.describe 'per-form required fields' do
           .not_to raise_error
       end
 
-      it 'does not require personnel_project_total_funding, which is Personnel-only' do
+      it 'does not require project_funding_entity, which is Personnel-only' do
         allow(CBGP::Dataset).to receive(:write_dataset_to_db)
         dataset = CBGP::Dataset.load_from_params_and_write(params: research_params, form: 'national_regional_research_project')
         expect(dataset.title).to eq('A Research Project')
       end
     end
 
-    context 'on the Personnel form (personnel_project_total_funding required)' do
-      it 'raises ValidationError naming Total funding when personnel_project_total_funding is missing' do
-        params = personnel_params.reject { |k, _| k == 'personnel_project_total_funding' }
+    context 'on the Personnel form (project_funding_entity required)' do
+      it 'raises ValidationError naming the funding entity when project_funding_entity is missing' do
+        params = personnel_params.reject { |k, _| k == 'project_funding_entity' }
         expect { CBGP::Dataset.load_from_params_and_write(params: params, form: 'personnel_project') }
           .to raise_error(CBGP::Dataset::ValidationError) do |e|
             expect(e.errors).to contain_exactly(
-              hash_including(label: 'Total funding', message: 'Total funding is required')
+              hash_including(label: 'Funding entity', message: 'Funding entity is required')
             )
           end
       end
@@ -176,9 +180,9 @@ RSpec.describe 'per-form required fields' do
       expect(find_question(questionnaire, 'personnel_project_total_funding')).to be_nil
     end
 
-    it 'marks personnel_project_total_funding required on the Personnel questionnaire' do
+    it 'marks project_funding_entity required on the Personnel questionnaire' do
       questionnaire = Questionnaire.new(questionnaire_type: 'personnel_project')
-      expect(find_question(questionnaire, 'personnel_project_total_funding').required).to be true
+      expect(find_question(questionnaire, 'project_funding_entity').required).to be true
     end
 
     it 'has no project_call_for_proposal_title question at all on the Personnel questionnaire' do

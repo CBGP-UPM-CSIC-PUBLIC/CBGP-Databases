@@ -24,8 +24,9 @@ RSpec.describe 'conditional requirements' do
       expect(CBGP::Dataset.form_conditional_requirements(form: 'not_a_real_form')).to eq([])
     end
 
-    it 'covers every Core project form, and moved the dates out of their unconditional requirements' do
-      %w[european_research_project national_regional_research_project private_research_project personnel_project].each do |form|
+    it 'covers every project form, and moved the dates out of their unconditional requirements' do
+      %w[european_research_project national_regional_research_project private_research_project personnel_project
+         programa_propio_research_project].each do |form|
         expect(CBGP::Dataset.form_conditional_requirements(form: form).map { |r| r[:field] })
           .to contain_exactly('project_end_date', 'project_start_date')
         expect(CBGP::Dataset.form_required_fields(form: form)).not_to include('project_start_date', 'project_end_date')
@@ -86,7 +87,7 @@ RSpec.describe 'conditional requirements' do
     let(:params) do
       { 'database' => 'european_research_project', 'primary_id' => '',
         'project_title' => 'An Application', 'project_pi_nie' => '12345678Z',
-        'european_private_research_project_funding_institution' => 'placeholder',
+        'project_funding_institution' => 'placeholder', 'project_affiliation' => 'affiliation_upm',
         'project_application_url' => 'https://example.org/call/TEST', 'project_call_for_proposal_title' => 'Call',
         'project_internal_code' => 'TEST-1' }
     end
